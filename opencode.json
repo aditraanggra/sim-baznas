@@ -1,0 +1,130 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "9router": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://172.23.208.1:20128/v1",
+        "apiKey": "sk-674981193bd6e642-xhc2w9-60121698"
+      },
+      "models": {
+        "su/claude-sonnet-5-5": {
+          "name": "su/claude-sonnet-5-5",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/deepseek-v4.1-flash-1017": {
+          "name": "su/deepseek-v4.1-flash-1017",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/deepseek-v4.1-flash:fast": {
+          "name": "su/deepseek-v4.1-flash:fast",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/deepseek-v4.1-flash:netra": {
+          "name": "su/deepseek-v4.1-flash:netra",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/gemini/gemini-3.5-flash": {
+          "name": "su/gemini/gemini-3.5-flash",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/glm-5.3-flash": {
+          "name": "su/glm-5.3-flash",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/glm-5.3-flash:fast": {
+          "name": "su/glm-5.3-flash:fast",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/qwen3.8-flash": {
+          "name": "su/qwen3.8-flash",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "su/grok-4.7": {
+          "name": "su/grok-4.7",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "model": "9router/su/claude-sonnet-5-5",
+  "agent": {
+    "explorer": {
+      "description": "Fast explorer subagent for codebase exploration",
+      "mode": "subagent",
+      "model": "9router/su/claude-sonnet-5-5"
+    }
+  }
+}

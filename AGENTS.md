@@ -12,7 +12,7 @@ Sumber kebenaran: `docs/prd-pkp.md` (PRD v0.1). Rencana kerja: `docs/implementat
 
 ## Perintah
 
-PHP dan Composer ada di `/home/sa00/.config/herd-lite/bin/` (tambahkan ke PATH atau panggil lengkap).
+PHP dan Composer hanya ada di WSL Ubuntu-22.04 (`/home/sa00/.config/herd-lite/bin/`). Jalankan: `wsl.exe -d Ubuntu-22.04 -- bash -lc "cd /mnt/d/IT/sim-baznas && ~/.config/herd-lite/bin/php artisan ..."`. Node/npm di Windows; bila `vite`/`eslint`/`tsc` tidak dikenali, panggil `node node_modules/<paket>/bin/<berkas>.js`.
 
 | Tujuan | Perintah |
 |---|---|

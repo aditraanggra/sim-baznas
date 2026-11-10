@@ -1,6 +1,6 @@
 # Modul PK1: Rencana (RKAT)
 
-Rilis P1. Cakupan dari PRD 5 dan kriteria selesai PRD 14.2.
+Rilis P1. Cakupan dari PRD 5 dan kriteria selesai PRD 14.2. Status: **diimplementasikan 9 November 2026**, menunggu review; lihat `docs/modules/PK1-plan.md` (hasil implementasi) dan `docs/open-questions.md` temuan 25-34.
 
 ## Cakupan
 

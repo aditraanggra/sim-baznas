@@ -26,6 +26,7 @@ Rilis P0. Cakupan dari PRD 14.1 dan kriteria selesai PRD 14.2.
 - Impor idempoten: impor dua kali dengan berkas sama tidak menambah baris.
 - Migrasi rollback bersih.
 
-## Blocker
+## Status
 
-- D1: dokumen RKAT 2026. Tanpa itu poin 3 tidak dapat diselesaikan; sementara hanya struktur dan mekanisme.
+- **Selesai 9 November 2026.** D1 terjawab sebagian: seed memakai fixture `docs/fixtures/rkat-2026.json` (112 pos, kontrol PRD 10.1 cocok). Program Prioritas dan kolom jiwa/unit/desa belum ada di sumber (temuan 18) sehingga belum masuk seed.
+- Detail implementasi dan verifikasi: `docs/modules/PK0-plan.md`.

@@ -57,3 +57,16 @@ Aturan (PRD 15): hal [TBC] **tidak boleh ditebak**. Catat di sini, pakai asumsi 
 22. **Dimensi "via UPZ" ada** di penerimaan (kode 1.3, 1.5, 2.2, 2.5, 5.2) dan penyaluran tidak memisahkannya. Temuan 12 lama terjawab: kartu "langsung vs via UPZ" bisa dibangun dari pos penerimaan.
 23. **Penyaluran sumber punya kelompok tambahan** yang tidak disebut eksplisit di PRD: Fidyah (7), Infak Penyaluran (5), Penyaluran Dana Infak Operasional (9). Ikut sebagai pos baku; tidak mengubah VAL mana pun.
 24. **A3 "Penyaluran Dana Infak/Sedekah Tidak Terikat" total 9.732.902.000** vs penerimaan infak tidak terikat + terikat via UPZ dll — selisih antar lampiran dibiarkan apa adanya sesuai sumber; VAL-1 memakai total lampiran, bukan antar-rincian.
+
+## Temuan implementasi PK1 (9 November 2026)
+
+25. **Seed PK0 salah induk `L5/1.2` (Muzakki Badan).** Pencarian induk memakai `kode|tipe_nilai` sehingga baris bertipe `badan` kehilangan induk `L5/1`. Diperbaiki (`PosAnggaranSeeder` mencari induk per kode); akar pos 28 menjadi 27. `L5/1` kini 201.459 (sama dengan sumber); orang saja (VAL-5) = `L5/1 − L5/1.2` = 201.430.
+26. **Keputusan pengguna (O-1): impor historis lolos BR-04 dengan peringatan.** Versi Awal `sumber=impor` boleh diajukan dan disahkan walau VAL gagal (hasil hitung berkas: 2022-2024 gagal VAL-1/2; 2023 juga VAL-4). Input manual, versi Perubahan, dan versi impor yang sudah diedit tetap kena BR-04. Menyimpang dari PRD 10.2 BR-04 untuk jalur impor.
+27. **Definisi VAL atas kode baku.** Hak amil = `L3/1.3 + 2.2 + 3.2 + 4.2 + 8.2`; Kurban `L3/6.2` dan Fidyah `L3/7.2` dikecualikan (tidak ada baris L6 dan tidak ada batas; 0 pada 2022-2026). VAL-4 memakai `L6/1.1..1.4 + L6/1.6..1.8`; Infak Operasional `L6/1.5` tidak termasuk rumus (harfiah PRD), sehingga RKAT 2023 (950 jt) gagal VAL-4. Hibah APBN/APBD ada di L6 pada pos baku, bukan L7 seperti PRD 5.2.
+28. **VAL-5 tautologi** bila induk dihitung dari daun (BR-03); tetap diuji, dan impor melaporkan peringatan bila subtotal berkas berbeda dari hitungan sistem.
+29. **Persen Lampiran 2-7** = nilai pos ÷ jumlah pos puncak sejenis dalam satu lampiran (luar neraca L2/LN terpisah); hanya untuk pos rupiah. Kolom persen tidak ada di sumber (temuan 20); asumsi menunggu konfirmasi.
+30. **Masa berlaku pos belum dipakai.** Seed PK0 memberi `berlaku_dari_tahun = 2026` padahal berkas sumber memuat 2022-2031 dengan kode sama; pemetaan impor dan hitung RKAT mengabaikan masa berlaku (hanya `aktif`).
+31. **Target pengentasan (Q4)** disimpan dalam dua kolom nullable (`target_pengentasan_ekstrem`, `target_pengentasan_garis`); arti angka 660 tetap terbuka. `target_orang` disimpan apa adanya (arti belum dikonfirmasi).
+32. **Dokumen setelah Disahkan.** Nilai, catatan, dan batas terkunci; PDF surat pengesahan/lembar penetapan boleh ditambah (berkas lama diarsipkan, tanpa hard delete).
+33. **Alias hanya many-to-one per tahun dan hanya memetakan ulang versi Draft.** Versi terkunci tidak berubah (BR-02); pemetaan baru berlaku lewat versi Perubahan.
+34. **Format yang belum dikirim (menunggu pengguna):** RKAT 2021; status kolom 2022-2025 (disahkan atau rencana) dan ada tidaknya versi Perubahan; Lampiran 2-7 asli untuk tata letak ekspor; catatan pengesahan tahun selain 2026; format nomor surat; Program Prioritas, jiwa/unit/desa L4, saldo awal dana.

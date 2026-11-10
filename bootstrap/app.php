@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PastikanPeran;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,7 +20,21 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->alias([
+            'peran' => PastikanPeran::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->respond(function (Response $response) {
+            return match ($response->getStatusCode()) {
+                403 => Inertia::render('error', ['status' => 403, 'pesan' => 'Anda tidak memiliki akses ke halaman ini.'])
+                    ->toResponse(request())
+                    ->setStatusCode(403),
+                404 => Inertia::render('error', ['status' => 404, 'pesan' => 'Halaman tidak ditemukan.'])
+                    ->toResponse(request())
+                    ->setStatusCode(404),
+                default => $response,
+            };
+        });
     })->create();

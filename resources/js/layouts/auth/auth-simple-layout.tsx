@@ -1,14 +1,18 @@
 import AppLogoIcon from '@/components/app-logo-icon';
-import { Link } from '@inertiajs/react';
+import { type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 
-interface AuthLayoutProps {
+export default function AuthSimpleLayout({
+    children,
+    title,
+    description,
+}: {
     children: React.ReactNode;
-    name?: string;
     title?: string;
     description?: string;
-}
+}) {
+    const { name } = usePage<SharedData>().props;
 
-export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
     return (
         <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
             <div className="w-full max-w-sm">
@@ -18,7 +22,7 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                             <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
                                 <AppLogoIcon className="size-9 fill-current text-[var(--foreground)] dark:text-white" />
                             </div>
-                            <span className="sr-only">{title}</span>
+                            <span className="sr-only">{name}</span>
                         </Link>
 
                         <div className="space-y-2 text-center">

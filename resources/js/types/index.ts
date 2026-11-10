@@ -1,7 +1,7 @@
 import { LucideIcon } from 'lucide-react';
 
 export interface Auth {
-    user: User;
+    user: User | null;
 }
 
 export interface BreadcrumbItem {
@@ -23,8 +23,9 @@ export interface NavItem {
 
 export interface SharedData {
     name: string;
-    quote: { message: string; author: string };
+    tahun_aktif: number;
     auth: Auth;
+    flash: { sukses?: string | null };
     [key: string]: unknown;
 }
 
@@ -32,6 +33,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    peran: string[];
     avatar?: string;
     email_verified_at: string | null;
     created_at: string;
