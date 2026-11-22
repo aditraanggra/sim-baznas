@@ -70,3 +70,55 @@ Aturan (PRD 15): hal [TBC] **tidak boleh ditebak**. Catat di sini, pakai asumsi 
 32. **Dokumen setelah Disahkan.** Nilai, catatan, dan batas terkunci; PDF surat pengesahan/lembar penetapan boleh ditambah (berkas lama diarsipkan, tanpa hard delete).
 33. **Alias hanya many-to-one per tahun dan hanya memetakan ulang versi Draft.** Versi terkunci tidak berubah (BR-02); pemetaan baru berlaku lewat versi Perubahan.
 34. **Format yang belum dikirim (menunggu pengguna):** RKAT 2021; status kolom 2022-2025 (disahkan atau rencana) dan ada tidaknya versi Perubahan; Lampiran 2-7 asli untuk tata letak ekspor; catatan pengesahan tahun selain 2026; format nomor surat; Program Prioritas, jiwa/unit/desa L4, saldo awal dana.
+
+## Keputusan dan Pertanyaan Terbuka SISFOZIS (22 November 2026)
+
+Sumber kebenaran utama sejak 22 November 2026 adalah `docs/PRD.md` (v0.1, 14 Nov 2026) dan rencana kerja lintas fase di `TASK.md`.
+
+### Keputusan Arsitektur & Bisnis Terkunci (K1-K15)
+
+| # | Keputusan | Dampak & Catatan Penyimpangan PRD |
+|---|---|---|
+| K1 | `docs/PRD.md` menjadi sumber kebenaran utama. RKAT berbasis pos L2-L7 (`PK0`/`PK1`) dipertahankan sebagai `PRC-01`/`PRC-02` dan dijembatani ke `program`/`bidang`/`sumber_dana`. | Tidak ada refaktor tabel `rkat_*`. `docs/prd-pkp.md` dan `docs/rules.md` tetap berlaku untuk modul RKAT. |
+| K2 | Nominal uang memakai **BIGINT rupiah utuh** (aturan `AGENTS.md`), bukan `numeric(18,2)`. | **Penyimpangan `docs/PRD.md` Bagian 10:** semua tabel baru (`penerimaan_item`, `penyaluran_item`, `aset`, `cash_opname`, `jurnal`, dll.) memakai `bigInteger`. |
+| K3 | RBAC memakai **peran tetap**: peran yang ada ditambah peran baru per bidang, ditegakkan lewat middleware `peran:` + pengecekan ulang di Action. | **Penyimpangan `docs/PRD.md` Bagian 5 & 14.8:** tidak memakai izin granular `modul.sumberdaya.aksi` atau matriks izin dinamis; diganti tabel statis peran x bidang di `config/sisfozis.php`. |
+| K4 | Desain gabungan: `docs/DESIGN.md` di dalam aplikasi; hijau BAZNAS di launcher, login, dan halaman publik. | **Penyimpangan `docs/PRD.md` Bagian 14.15:** perintah CLI preset shadcn `b3Z3SCCVl2` tidak dijalankan; token diterapkan manual di `resources/css/app.css`. |
+| K5 | Rekomendasi kompleksitas tugas & model: S, M, M-UI, L, XL (`TASK.md` bagian 3). | Tugas L/XL selalu mulai dengan rencana tertulis untuk review. |
+| K6 | Sinkronisasi VPS dan server lokal di luar MVP (Fase 4). Fase 0 hanya Docker + FrankenPHP. | Infrastruktur sinkronisasi ditunda ke `P4-01`. |
+| K7 | 18 peran per bidang (`pelayanan_muzakki`, `pelayanan_mustahik`, `admin_arsip`, `perencanaan`, `keuangan`, `kabag_sau`, `kabag_pengumpulan`, `kabag_pendis_pendag`, `kabag_pkp`, `staf_pendistribusian`, `staf_pendayagunaan`, `amil`, `waka_1..4`, `ketua`, `upz`) + `admin`. | Semua pengguna internal otomatis memiliki peran dasar `amil` (profil, SK amil, tugas). Peran lama `pimpinan` dipecah menjadi `ketua` dan `waka_1..4`. Kabag dapat melihat dashboard bidang lain (view only) dan kelola penuh di bidangnya. |
+| K8 | Rute permohonan mengikuti `docs/PRD.md` 7.2 (7 langkah lengkap): Pelayanan Mustahik (input/verifikasi) -> Disposisi Ketua -> Kabag Pendis Pendag (hasil asesmen) -> Wakil Ketua II (ajuan besaran bantuan) -> Ketua (ACC besaran bantuan) -> Staf Pendis/Pendag (meminta uang ke bagian keuangan) -> Pelayanan Mustahik (bantuan diterima mustahik). | Penugasan Staf Pendis vs Pendag fleksibel (`PDP-T04`, `PDP-T08`). |
+| K9 | Rute arsip umum / surat masuk: Admin Arsip -> Ketua -> Wakil Ketua I/II/III/IV (bisa multi Waka) -> instruksi tindak lanjut ke bawahan. | Berdampak pada `ADM-T02`. |
+| K10 | Jenis dana = Zakat, Infak/Sedekah, DSKL, dan **CSR**. Asnaf hanya wajib untuk dana Zakat; dana lain tanpa asnaf. | Berdampak pada seed `jenis_dana` (`F0-10`) dan validasi `PDP-T08`. |
+| K11 | Peringatan "saldo tidak cukup" dihitung per **Kelompok Dana** (Zakat, Infak/Sedekah, DSKL, CSR). | Berdampak pada `PDP-T08`. |
+| K12 | Peran `upz` adalah akun pengguna eksternal (pengurus UPZ luar kantor) yang login untuk melihat data setoran dan status SK UPZ-nya sendiri. | Berdampak pada `F0-03`, `UPZ-T01`, `UPZ-T04`. |
+| K13 | Master Wilayah Kabupaten Cianjur bersumber dari `docs/Daerah Kabupaten Cianjur.csv` (360 desa, kecamatan lengkap di Kab. Cianjur). | Berdampak pada seed wilayah `F0-09`. |
+| K14 | Master Dana, Asnaf, dan Program bersumber dari `docs/Jenis Dana_Sumber Dana_Asnaf_Program.md`: 4 Jenis Dana (`Zakat`, `Infak`, `DSKL`, `CSR`), 9 Sumber Dana (`ZF`, `ZM`, `IFTT`, `IFT`, `FDY`, `KRB`, `KA`, `KFT`, `CSR`), 8 Asnaf khusus Zakat (`Fakir`, `Miskin`, `Amil`, `Mualaf`, `Riqob`, `Ibnu Sabil`, `Gharimin`, `Fisabilillah`), Program Pendistribusian (`Kemanusiaan`, `Kesehatan`, `Pendidikan`, `Dakwah-Advokasi`), dan Program Pendayagunaan (`Ekonomi`, `Kesehatan`, `Pendidikan`). | Berdampak pada `F0-10` dan `PDP-T08`. |
+| K15 | Penomoran dokumen dibuat berbasis template konfigurasi (`config/penomoran.php` dengan token seperti `{jenis}`, `{urut:4}`, `{romawi_bulan}`, `{tahun}`) di atas tabel `nomor_sequence` dengan row-locking. | Format baku resmi dapat diubah dari 1 baris config tanpa mengubah kode action atau skema DB (`F0-13`, `ADM-T01`, `UMM-T01`). |
+
+### Pertanyaan Terbuka SISFOZIS (Q-01 s.d. Q-23)
+
+| # | Pertanyaan | Memblokir | Status / Asumsi Konservatif |
+|---|---|---|---|
+| Q-01 | Daftar peran per bidang | F0-03 | **TERJAWAB 22 Nov** -> K7 (`TASK.md` bagian 1.1) |
+| Q-02 | Format nomor kwitansi, berita acara, penyaluran, surat keluar, agenda surat masuk, aset | F0-13, ADM-T01, UMM-T01 | **TERJAWAB 22 Nov** -> K15 (`config/penomoran.php` modular) |
+| Q-03 | Rute permohonan | PDP-T04 | **TERJAWAB 22 Nov** -> K8 (7 langkah sesuai PRD 7.2) |
+| Q-04 | Kesesuaian sumber dana dengan asnaf | PDP-T08 | **TERJAWAB 22 Nov** -> K10 (asnaf wajib hanya untuk Zakat) |
+| Q-05 | Saldo untuk peringatan "saldo tidak cukup": per sumber dana atau per kelompok dana? | PDP-T08 | **TERJAWAB 22 Nov** -> K11 (per Kelompok Dana) |
+| Q-06 | Bila berita acara hari itu sudah final: boleh ada penerimaan susulan bertanggal sama? Bagaimana pembatalan transaksi di BA final? | PGM-T07, PGM-T08 | **DIKUNCI KONVENSERVATIF (22 Nov):** Tanggal BA final terkunci terhadap transaksi baru; pembatalan Maker-Checker menandai BA lama `digantikan` dan menerbitkan BA Revisi (`revisi_ke + 1`) bernomor baru. |
+| Q-07 | Sumber data wilayah (kode Kemendagri/BPS) untuk kecamatan dan desa Cianjur | F0-09 | **TERJAWAB 22 Nov** -> `docs/Daerah Kabupaten Cianjur.csv` (K13) |
+| Q-08 | Arti DIBALEKA dan daftar jenis UPZ final | UPZ-T01 | **DIKUNCI KONSERVATIF (22 Nov):** `jenis_upz` di-seed sebagai master label (`DKM`, `DESA`, `DIBALEKA`, `PERUSAHAAN`, `SEKOLAH`, `YAYASAN`, `INSTANSI`) yang dapat dikelola via Master Data admin. |
+| Q-09 | Penyedia captcha (server tanpa akses luar?) | PDP-T12 | **DIKUNCI KONSERVATIF (22 Nov):** Portal lacak publik memakai kombinasi `kode_tracking` + 4 digit akhir telepon + `throttle:10,1` tanpa menampilkan nama petugas internal; captcha eksternal opsional pasca-MVP. |
+| Q-10 | Metode 2FA (aplikasi TOTP, email OTP) | F0-07 | **DIKUNCI KONSERVATIF (22 Nov):** RFC 6238 TOTP (6 digit) wajib untuk peran `admin` dan `keuangan`. |
+| Q-11 | NIK: enkripsi saat disimpan (UU PDP) bertentangan dengan unik/cari. Setuju kolom hash untuk cari + enkripsi nilai? | PGM-T01, PDP-T01 | **DIKUNCI KONSERVATIF (22 Nov):** NIK disimpan terenkripsi (`Crypt`, `nik_encrypted`), diindeks lewat HMAC-SHA256 (`nik_hash`), dan ditampilkan termasking (`nik_masked`). |
+| Q-12 | Realisasi historis 2022-2025 (sebelum go-live) masih perlu diinput manual/impor (rencana PK2 lama)? | PRC-T02, PRC-T08 | **TERBUKA** — Asumsi: ya, lewat impor; data transaksi sejak go-live |
+| Q-13 | Rincian sumber dana per jenis dana, daftar asnaf, dan program per bidang | F0-10 | **TERJAWAB 22 Nov** -> `docs/Jenis Dana_Sumber Dana_Asnaf_Program.md` (K14) |
+| Q-14 | Pemetaan 7 langkah rute K8 ke 7 status publik (Diajukan, Disposisi, Verifikasi, Acc Pimpinan, Disetujui, Dicairkan, Ditolak) | PDP-T04 | **DIKUNCI KONSERVATIF (22 Nov):** 8 status internal (`diajukan`, `disposisi_ketua`, `asesmen_kabag`, `ajuan_waka_2`, `acc_ketua`, `minta_keuangan` [`tampil_publik=false`], `diterima_mustahik`, `ditolak`) dipetakan ke 7 status publik (`diajukan`, `disposisi`, `verifikasi`, `acc_pimpinan`, `disetujui`, `dicairkan`, `ditolak`). |
+| Q-15 | Aset kop surat: logo resmi, alamat, kontak, penandatangan per dokumen | F0-22 | **TERBUKA** — Asumsi: placeholder sampai dikirim |
+| Q-16 | Bantuan barang: dicatat dengan nilai rupiah taksiran? Masuk saldo? | PDP-T08 | **DIKUNCI KONSERVATIF (22 Nov):** Bantuan `BARANG` wajib menyertakan `uraian_barang` dan taksiran rupiah `BIGINT > 0` yang diperhitungkan dalam saldo Kelompok Dana. |
+| Q-17 | Capaian indikator non-keuangan (jumlah mustahik, dll.) dihitung otomatis atau diinput? | PRC-T07 | **TERBUKA** — Asumsi: otomatis bila ada data transaksi, selain itu input manual |
+| Q-18 | Umur ekonomis dan nilai residu per kategori aset; penyusutan mulai bulan perolehan atau bulan berikutnya | UMM-T03 | **TERBUKA** — Asumsi: mulai bulan berikutnya, residu 0% |
+| Q-19 | Peran `amil`: akses apa saja? Apakah semua pengguna otomatis `amil`? | F0-03 | **TERJAWAB 22 Nov** -> K7 (semua user internal otomatis punya role `amil` untuk profil, SK amil, tugas pribadi) |
+| Q-20 | Peran `upz`: siapa dan aksesnya apa? | F0-03, UPZ-T01 | **TERJAWAB 22 Nov** -> K12 (pengguna eksternal login di luar kantor untuk pantau setoran & SK UPZ sendiri) |
+| Q-21 | Peran lama `pimpinan`, pemecahan peran, dan hak lihat Kabag lintas bidang | F0-03, PRC-T01 | **TERJAWAB 22 Nov** -> K7 (`pimpinan` dipecah jadi `ketua` & `waka_1..4`; Kabag view dashboard bidang lain) |
+| Q-22 | Rute permohonan 7 langkah PRD, staf pendis/pendag, dan posisi pencairan keuangan | PDP-T04, PDP-T08 | **TERJAWAB 22 Nov** -> K8 (7 langkah PRD, staf fleksibel, minta dana ke keuangan saat di staf setelah ACC Ketua) |
+| Q-23 | Rute arsip umum / surat masuk | ADM-T02 | **TERJAWAB 22 Nov** -> K9 (Admin Arsip -> Ketua -> multi Waka I-IV -> instruksi tindak lanjut ke bawahan) |

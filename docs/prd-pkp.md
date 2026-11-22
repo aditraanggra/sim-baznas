@@ -1,5 +1,7 @@
 # PRD v0.1 — Aplikasi PKP BAZNAS Kabupaten Cianjur
 
+> **Catatan Status (22 November 2026 — K1):** Sejak 22 November 2026, `docs/PRD.md` menjadi sumber kebenaran utama aplikasi **SISFOZIS BAZNAS Kabupaten Cianjur**. Dokumen `docs/prd-pkp.md` ini tetap berlaku sebagai spesifikasi rinci modul RKAT berbasis pos L2-L7 (`PK0`/`PK1` = `PRC-01`) beserta aturan validasi `VAL-1..VAL-6` dan aturan bisnis `BR-01..BR-14` tanpa refaktor tabel `rkat_*`.
+>
 > Draft untuk review · 5 November 2026
 > Aplikasi PKP (Perencanaan, Keuangan, Pelaporan) dikembangkan lebih dulu dan berdiri sendiri; PRD sistem ZIS lengkap ditahan sementara.
 > **[TBC]** = menunggu jawaban atau file dari BAZNAS Cianjur · **[ASUMSI]** = default yang boleh dikoreksi

@@ -1,6 +1,10 @@
 # Modul PK1: Rencana (RKAT)
 
-Rilis P1. Cakupan dari PRD 5 dan kriteria selesai PRD 14.2. Status: **diimplementasikan 9 November 2026**, menunggu review; lihat `docs/modules/PK1-plan.md` (hasil implementasi) dan `docs/open-questions.md` temuan 25-34.
+Rilis P1. Cakupan dari PRD 5 dan kriteria selesai PRD 14.2. Status: **Selesai dan di-review 22 November 2026 (PRC-T01)**; lihat `docs/modules/PK1-plan.md` (hasil implementasi) dan `docs/open-questions.md` temuan 25-34.
+
+## Catatan Kompatibilitas K7 (F0-03)
+
+Saat tugas `F0-03` memecah peran `pimpinan` menjadi `ketua` dan `waka_1..4` serta menambahkan peran per bidang (`kabag_pkp`, `kabag_*`), daftar peran lihat dan tulis RKAT (`RkatAction::PERAN_TULIS`, `RencanaController`, dan rute `routes/rencana.php`) perlu diperluas agar peran baru yang berwenang tetap memiliki akses yang sesuai tanpa merusak uji fitur PK1 yang ada.
 
 ## Cakupan
 

@@ -1,6 +1,6 @@
 # Rencana Implementasi PK1 (Rencana / RKAT)
 
-Status: **diimplementasikan 9 November 2026**, menunggu review. Sumber: `docs/modules/PK1.md`, PRD 5, 10, 14.2, `docs/rules.md`, `docs/open-questions.md`, kode PK0.
+Status: **Selesai dan di-review 22 November 2026 (PRC-T01)**. Sumber: `docs/modules/PK1.md`, PRD 5, 10, 14.2, `docs/rules.md`, `docs/open-questions.md`, kode PK0.
 
 ## Hasil implementasi (9 November 2026)
 
