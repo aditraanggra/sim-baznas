@@ -21,7 +21,7 @@ final class HitungRkat
         $nilaiTersimpan = $versi->nilai()->get();
         $daun = $nilaiTersimpan->whereNotNull('pos_anggaran_id')->pluck('nilai', 'pos_anggaran_id')->all();
 
-        // ponytail: masa berlaku pos (berlaku_dari/sampai_tahun) belum dipakai; seed PK0 memberi 2026 padahal data 2022-2031 memakai kode sama.
+        // Masa berlaku pos (berlaku_dari/sampai_tahun) belum dipakai; lihat docs/open-questions.md temuan 30 (seed PK0 memberi 2026 padahal data 2022-2031 memakai kode sama).
         $pos = PosAnggaran::query()
             ->where(fn ($q) => $q->where('aktif', true)->orWhereIn('id', array_keys($daun)))
             ->get()

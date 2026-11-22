@@ -1,0 +1,130 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sim-baznas-app:latest
+    container_name: pkp-app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      APP_NAME: "SISFOZIS BAZNAS Cianjur"
+      APP_ENV: local
+      APP_KEY: ${APP_KEY:-base64:Wh7i0IV35pS8KHxYXuUDlCVS9plEspwI2vii2HuH31E=}
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      APP_TIMEZONE: Asia/Jakarta
+      APP_LOCALE: id
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: pkp
+      DB_USERNAME: pkp
+      DB_PASSWORD: pkp
+      QUEUE_CONNECTION: database
+      RUN_MIGRATIONS: "true"
+      RUN_SEEDER: "true"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - .:/var/www/html
+      - storage_data:/var/www/html/storage
+    networks:
+      - pkp-network
+
+  pkp-queue:
+    image: sim-baznas-app:latest
+    container_name: pkp-queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment:
+      APP_NAME: "SISFOZIS BAZNAS Cianjur"
+      APP_ENV: local
+      APP_KEY: ${APP_KEY:-base64:Wh7i0IV35pS8KHxYXuUDlCVS9plEspwI2vii2HuH31E=}
+      APP_DEBUG: "true"
+      APP_TIMEZONE: Asia/Jakarta
+      APP_LOCALE: id
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: pkp
+      DB_USERNAME: pkp
+      DB_PASSWORD: pkp
+      QUEUE_CONNECTION: database
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    volumes:
+      - .:/var/www/html
+      - storage_data:/var/www/html/storage
+    networks:
+      - pkp-network
+
+  pkp-scheduler:
+    image: sim-baznas-app:latest
+    container_name: pkp-scheduler
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      APP_NAME: "SISFOZIS BAZNAS Cianjur"
+      APP_ENV: local
+      APP_KEY: ${APP_KEY:-base64:Wh7i0IV35pS8KHxYXuUDlCVS9plEspwI2vii2HuH31E=}
+      APP_DEBUG: "true"
+      APP_TIMEZONE: Asia/Jakarta
+      APP_LOCALE: id
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: pkp
+      DB_USERNAME: pkp
+      DB_PASSWORD: pkp
+      QUEUE_CONNECTION: database
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    volumes:
+      - .:/var/www/html
+      - storage_data:/var/www/html/storage
+    networks:
+      - pkp-network
+
+  pkp-postgres:
+    image: postgres:17-alpine
+    container_name: pkp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pkp
+      POSTGRES_USER: pkp
+      POSTGRES_PASSWORD: pkp
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pkp -d pkp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pkp-network
+
+volumes:
+  storage_data:
+  postgres_data:
+
+networks:
+  pkp-network:
+    driver: bridge

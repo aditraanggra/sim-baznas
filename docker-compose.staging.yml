@@ -1,0 +1,125 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sim-baznas-app:staging
+    container_name: sisfozis-staging-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      APP_NAME: "SISFOZIS BAZNAS Cianjur (Staging)"
+      APP_ENV: staging
+      APP_KEY: ${APP_KEY:?APP_KEY wajib disetel di environment staging}
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_TIMEZONE: Asia/Jakarta
+      APP_LOCALE: id
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pkp}
+      DB_USERNAME: ${DB_USERNAME:-pkp}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib disetel}
+      QUEUE_CONNECTION: database
+      SESSION_LIFETIME: 120
+      RUN_MIGRATIONS: "true"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - staging_storage:/var/www/html/storage
+    networks:
+      - staging-network
+
+  pkp-queue:
+    image: sim-baznas-app:staging
+    container_name: sisfozis-staging-queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment:
+      APP_NAME: "SISFOZIS BAZNAS Cianjur (Staging)"
+      APP_ENV: staging
+      APP_KEY: ${APP_KEY:?APP_KEY wajib disetel di environment staging}
+      APP_DEBUG: "false"
+      APP_TIMEZONE: Asia/Jakarta
+      APP_LOCALE: id
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pkp}
+      DB_USERNAME: ${DB_USERNAME:-pkp}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib disetel}
+      QUEUE_CONNECTION: database
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    volumes:
+      - staging_storage:/var/www/html/storage
+    networks:
+      - staging-network
+
+  pkp-scheduler:
+    image: sim-baznas-app:staging
+    container_name: sisfozis-staging-scheduler
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      APP_NAME: "SISFOZIS BAZNAS Cianjur (Staging)"
+      APP_ENV: staging
+      APP_KEY: ${APP_KEY:?APP_KEY wajib disetel di environment staging}
+      APP_DEBUG: "false"
+      APP_TIMEZONE: Asia/Jakarta
+      APP_LOCALE: id
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pkp}
+      DB_USERNAME: ${DB_USERNAME:-pkp}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib disetel}
+      QUEUE_CONNECTION: database
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    volumes:
+      - staging_storage:/var/www/html/storage
+    networks:
+      - staging-network
+
+  pkp-postgres:
+    image: postgres:17-alpine
+    container_name: sisfozis-staging-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pkp}
+      POSTGRES_USER: ${DB_USERNAME:-pkp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib disetel}
+    volumes:
+      - staging_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-pkp} -d ${DB_DATABASE:-pkp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - staging-network
+
+volumes:
+  staging_storage:
+  staging_postgres:
+
+networks:
+  staging-network:
+    driver: bridge

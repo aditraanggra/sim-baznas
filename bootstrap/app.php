@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PastikanAksesBidang;
+use App\Http\Middleware\PastikanDuaFaktor;
 use App\Http\Middleware\PastikanPeran;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,10 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            PastikanDuaFaktor::class,
         ]);
 
         $middleware->alias([
+            'bidang' => PastikanAksesBidang::class,
             'peran' => PastikanPeran::class,
+            'wajib.2fa' => PastikanDuaFaktor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

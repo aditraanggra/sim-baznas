@@ -1,17 +1,22 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { navGroups, navPengaturan } from '@/lib/nav';
+import { deteksiBidangAktif, navPengaturan, navPerBidang } from '@/lib/nav';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
-    const { auth } = usePage<SharedData>().props;
+    const page = usePage<SharedData>();
+    const { auth } = page.props;
     const isAdmin = auth.user?.peran?.includes('admin') ?? false;
+    const bidangAktif = deteksiBidangAktif(page.url);
+
+    const groups = bidangAktif.kode === 'pengaturan' ? [] : (navPerBidang[bidangAktif.kode] ?? []);
+    const tampilkanPengaturan = bidangAktif.kode === 'pengaturan' || isAdmin;
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="inset" className="border-r">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -25,7 +30,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain groups={navGroups} showPengaturan={isAdmin} pengaturan={navPengaturan} />
+                <NavMain groups={groups} showPengaturan={tampilkanPengaturan} pengaturan={navPengaturan} accentColor={bidangAktif.warna} />
             </SidebarContent>
 
             <SidebarFooter>

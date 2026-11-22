@@ -19,24 +19,58 @@ export interface NavItem {
     url: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    badge?: number | string;
+}
+
+export interface BidangInfo {
+    kode: 'pengumpulan' | 'distribusi' | 'umum' | 'pkp' | string;
+    nama: string;
+    warna: string;
+    urutan: number;
+}
+
+export interface NotifikasiItem {
+    id: number;
+    jenis: string;
+    judul: string;
+    pesan: string;
+    tautan: string | null;
+    dibaca: boolean;
+    waktu: string | null;
 }
 
 export interface SharedData {
     name: string;
     tahun_aktif: number;
+    bidang_daftar?: BidangInfo[];
     auth: Auth;
-    flash: { sukses?: string | null };
+    notifikasi?: {
+        belum_dibaca: number;
+        daftar: NotifikasiItem[];
+    };
+    flash: {
+        sukses?: string | null;
+        peringatan?: string | null;
+    };
     [key: string]: unknown;
 }
 
 export interface User {
     id: number;
     name: string;
+    username?: string | null;
     email: string;
+    status?: 'aktif' | 'nonaktif' | string;
+    upz_id?: number | null;
     peran: string[];
+    peran_label?: string[];
+    kartu_launcher?: string[];
+    admin_sistem?: boolean;
+    wajib_2fa?: boolean;
+    two_factor_aktif?: boolean;
     avatar?: string;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    [key: string]: unknown;
 }

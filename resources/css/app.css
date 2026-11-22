@@ -8,14 +8,18 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        'Inter', 'Instrument Sans', -apple-system, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
+    --radius-xl: 1rem;
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
+    --color-surface-subtle: var(--surface-subtle);
+    --color-ink-muted: var(--ink-muted);
 
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
@@ -24,6 +28,9 @@
     --color-popover-foreground: var(--popover-foreground);
 
     --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --color-primary-active: var(--primary-active);
+    --color-primary-soft: var(--primary-soft);
     --color-primary-foreground: var(--primary-foreground);
 
     --color-secondary: var(--secondary);
@@ -36,17 +43,44 @@
     --color-accent-foreground: var(--accent-foreground);
 
     --color-destructive: var(--destructive);
+    --color-destructive-soft: var(--destructive-soft);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    --color-success: var(--success);
+    --color-success-soft: var(--success-soft);
+    --color-warning: var(--warning);
+    --color-warning-soft: var(--warning-soft);
+    --color-info: var(--info);
+    --color-info-soft: var(--info-soft);
+
     --color-border: var(--border);
+    --color-border-strong: var(--border-strong);
     --color-input: var(--input);
     --color-ring: var(--ring);
+
+    --color-brand: var(--brand);
+    --color-brand-hover: var(--brand-hover);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-deep: var(--brand-deep);
+    --color-gold: var(--gold);
+
+    --color-bidang-pengumpulan: var(--bidang-pengumpulan);
+    --color-bidang-distribusi: var(--bidang-distribusi);
+    --color-bidang-umum: var(--bidang-umum);
+    --color-bidang-pkp: var(--bidang-pkp);
+
+    --color-dana-zakat: var(--dana-zakat);
+    --color-dana-infak: var(--dana-infak);
+    --color-dana-dskl: var(--dana-dskl);
+    --color-dana-csr: var(--dana-csr);
+    --color-dana-lainnya: var(--dana-lainnya);
 
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
     --color-chart-3: var(--chart-3);
     --color-chart-4: var(--chart-4);
     --color-chart-5: var(--chart-5);
+    --color-chart-bar-idle: var(--chart-bar-idle);
 
     --color-sidebar: var(--sidebar-background);
     --color-sidebar-foreground: var(--sidebar-foreground);
@@ -58,93 +92,121 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
     *,
     ::after,
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--border, currentColor);
     }
 }
 
 :root {
-    --background: hsl(0, 0%, 100%);
-    --foreground: hsl(0, 0%, 3.9%);
-    --card: hsl(0, 0%, 100%);
-    --card-foreground: hsl(0, 0%, 3.9%);
-    --popover: hsl(0, 0%, 100%);
-    --popover-foreground: hsl(0, 0%, 3.9%);
-    --primary: hsl(0, 0%, 9%);
-    --primary-foreground: hsl(0, 0%, 98%);
-    --secondary: hsl(0, 0%, 96.1%);
-    --secondary-foreground: hsl(0, 0%, 9%);
-    --muted: hsl(0, 0%, 96.1%);
-    --muted-foreground: hsl(0, 0%, 45.1%);
-    --accent: hsl(0, 0%, 96.1%);
-    --accent-foreground: hsl(0, 0%, 9%);
-    --destructive: hsl(0, 84.2%, 60.2%);
-    --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 92.8%);
-    --input: hsl(0, 0%, 89.8%);
-    --ring: hsl(0, 0%, 3.9%);
-    --chart-1: hsl(12, 76%, 61%);
-    --chart-2: hsl(173, 58%, 39%);
-    --chart-3: hsl(197, 37%, 24%);
-    --chart-4: hsl(43, 74%, 66%);
-    --chart-5: hsl(27, 87%, 67%);
+    --background: #F3F5F9;
+    --foreground: #101828;
+    --card: #FFFFFF;
+    --card-foreground: #101828;
+    --surface-subtle: #F8F9FC;
+    --popover: #FFFFFF;
+    --popover-foreground: #101828;
+    --primary: #259148;
+    --primary-hover: #1E773B;
+    --primary-active: #18602F;
+    --primary-soft: #E9F5ED;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F8F9FC;
+    --secondary-foreground: #101828;
+    --muted: #F8F9FC;
+    --muted-foreground: #475467;
+    --ink-muted: #5E687A;
+    --accent: #FDC727;
+    --accent-foreground: #101828;
+    --destructive: #B42318;
+    --destructive-soft: #FDECEC;
+    --destructive-foreground: #FFFFFF;
+    --success: #137A3F;
+    --success-soft: #E6F6EC;
+    --warning: #9A5B00;
+    --warning-soft: #FFF3DC;
+    --info: #1D5FD1;
+    --info-soft: #E8F0FD;
+    --border: #E7EAF1;
+    --border-strong: #D0D5DD;
+    --input: #D0D5DD;
+    --ring: #259148;
+    --chart-1: #259148;
+    --chart-2: #0D9488;
+    --chart-3: #F59E0B;
+    --chart-4: #64748B;
+    --chart-5: #D0D5DD;
+    --chart-bar-idle: #E4E7EC;
+    --brand: #259148;
+    --brand-hover: #1E773B;
+    --brand-soft: #E9F5ED;
+    --brand-deep: #064E2B;
+    --gold: #FDC727;
+    --bidang-pengumpulan: #259148;
+    --bidang-distribusi: #FDC727;
+    --bidang-umum: #1D4ED8;
+    --bidang-pkp: #5B21B6;
+    --dana-zakat: #259148;
+    --dana-infak: #E0A100;
+    --dana-dskl: #2563EB;
+    --dana-csr: #5B21B6;
+    --dana-lainnya: #4A5361;
     --radius: 0.5rem;
-    --sidebar-background: hsl(0, 0%, 98%);
-    --sidebar-foreground: hsl(240, 5.3%, 30%);
-    --sidebar-primary: hsl(0, 0%, 10%);
-    --sidebar-primary-foreground: hsl(0, 0%, 98%);
-    --sidebar-accent: hsl(0, 0%, 94%);
-    --sidebar-accent-foreground: hsl(0, 0%, 30%);
-    --sidebar-border: hsl(0, 0%, 91%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
+    --sidebar-background: #F8F9FC;
+    --sidebar-foreground: #475467;
+    --sidebar-primary: #259148;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #ECEFF5;
+    --sidebar-accent-foreground: #101828;
+    --sidebar-border: #E7EAF1;
+    --sidebar-ring: #259148;
 }
 
 .dark {
-    --background: hsl(0, 0%, 3.9%);
-    --foreground: hsl(0, 0%, 98%);
-    --card: hsl(0, 0%, 3.9%);
-    --card-foreground: hsl(0, 0%, 98%);
-    --popover: hsl(0, 0%, 3.9%);
-    --popover-foreground: hsl(0, 0%, 98%);
-    --primary: hsl(0, 0%, 98%);
-    --primary-foreground: hsl(0, 0%, 9%);
-    --secondary: hsl(0, 0%, 14.9%);
-    --secondary-foreground: hsl(0, 0%, 98%);
-    --muted: hsl(0, 0%, 6.9%);
-    --muted-foreground: hsl(0, 0%, 63.9%);
-    --accent: hsl(0, 0%, 14.9%);
-    --accent-foreground: hsl(0, 0%, 98%);
-    --destructive: hsl(0, 84%, 60%);
-    --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 14.9%);
-    --input: hsl(0, 0%, 14.9%);
-    --ring: hsl(0, 0%, 83.1%);
-    --chart-1: hsl(220, 70%, 50%);
-    --chart-2: hsl(160, 60%, 45%);
-    --chart-3: hsl(30, 80%, 55%);
-    --chart-4: hsl(280, 65%, 60%);
-    --chart-5: hsl(340, 75%, 55%);
-    --sidebar-background: hsl(0, 0%, 7%);
-    --sidebar-foreground: hsl(0, 0%, 80%);
-    --sidebar-primary: hsl(360, 100%, 100%);
-    --sidebar-primary-foreground: hsl(0, 0%, 100%);
-    --sidebar-accent: hsl(0, 0%, 15.9%);
-    --sidebar-accent-foreground: hsl(240, 4.8%, 95.9%);
-    --sidebar-border: hsl(0, 0%, 15.9%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
+    --background: #0F172A;
+    --foreground: #F8FAFC;
+    --card: #1E293B;
+    --card-foreground: #F8FAFC;
+    --surface-subtle: #162032;
+    --popover: #1E293B;
+    --popover-foreground: #F8FAFC;
+    --primary: #259148;
+    --primary-hover: #2EAD56;
+    --primary-active: #1E773B;
+    --primary-soft: #143323;
+    --primary-foreground: #FFFFFF;
+    --secondary: #1E293B;
+    --secondary-foreground: #F8FAFC;
+    --muted: #1E293B;
+    --muted-foreground: #CBD5E1;
+    --ink-muted: #94A3B8;
+    --accent: #FDC727;
+    --accent-foreground: #101828;
+    --destructive: #F87171;
+    --destructive-soft: #451A1A;
+    --destructive-foreground: #0F172A;
+    --success: #4ADE80;
+    --success-soft: #143323;
+    --warning: #FBBF24;
+    --warning-soft: #3F2A0E;
+    --info: #60A5FA;
+    --info-soft: #1E3A5F;
+    --border: #334155;
+    --border-strong: #475569;
+    --input: #334155;
+    --ring: #259148;
+    --sidebar-background: #162032;
+    --sidebar-foreground: #CBD5E1;
+    --sidebar-primary: #259148;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #1E293B;
+    --sidebar-accent-foreground: #F8FAFC;
+    --sidebar-border: #334155;
+    --sidebar-ring: #259148;
 }
 
 @layer base {
@@ -154,5 +216,32 @@
 
     body {
         @apply bg-background text-foreground;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+
+    a[href],
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    summary,
+    select:not(:disabled),
+    input[type='checkbox']:not(:disabled),
+    input[type='radio']:not(:disabled) {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [aria-disabled='true'] {
+        cursor: not-allowed;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

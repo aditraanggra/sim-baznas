@@ -1,0 +1,23 @@
+.git
+.github
+.kilo
+.kilocode
+node_modules
+vendor
+.env
+.env.*
+!.env.example
+tests
+docs/*
+!docs/fixtures
+!docs/Daerah Kabupaten Cianjur.csv
+!docs/Jenis Dana_Sumber Dana_Asnaf_Program.md
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+public/build
+public/hot
+Dockerfile
+.dockerignore
+*.log

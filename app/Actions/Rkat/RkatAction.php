@@ -14,7 +14,7 @@ abstract class RkatAction extends Action
 {
     use MencatatAudit;
 
-    public const PERAN_TULIS = ['perencanaan', 'admin'];
+    public const PERAN_TULIS = ['perencanaan', 'kabag_pkp', 'admin'];
 
     protected function pastikanPenulis(): void
     {

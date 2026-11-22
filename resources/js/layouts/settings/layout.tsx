@@ -3,32 +3,38 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Profil',
         url: '/settings/profile',
         icon: null,
     },
     {
-        title: 'Password',
+        title: 'Kata Sandi',
         url: '/settings/password',
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: 'Autentikasi 2FA',
+        url: '/settings/two-factor',
+        icon: null,
+    },
+    {
+        title: 'Tampilan',
         url: '/settings/appearance',
         icon: null,
     },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-    const currentPath = window.location.pathname;
+    const page = usePage();
+    const currentPath = page.url.split('?')[0].split('#')[0];
 
     return (
         <div className="px-4 py-6">
-            <Heading title="Settings" description="Manage your profile and account settings" />
+            <Heading title="Pengaturan Akun" description="Kelola profil, kata sandi, dan keamanan dua faktor" />
 
             <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">

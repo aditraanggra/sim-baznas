@@ -14,8 +14,8 @@ Route::middleware(['auth'])->prefix('pkp/rencana')->group(function () {
     Route::get('versi/{versi}/ekspor/pdf', [EksporRencanaController::class, 'pdf'])->name('pkp.rencana.ekspor.pdf');
     Route::get('dokumen/{dokumen}', [RencanaController::class, 'unduhDokumen'])->name('pkp.rencana.dokumen.unduh');
 
-    // Tulis: perencanaan dan admin (Action menegakkan ulang peran dan status).
-    Route::middleware('peran:perencanaan,admin')->group(function () {
+    // Tulis: perencanaan, kabag_pkp, dan admin (Action menegakkan ulang peran dan status).
+    Route::middleware('peran:perencanaan,kabag_pkp,admin')->group(function () {
         Route::post('/', [RencanaController::class, 'buat'])->name('pkp.rencana.buat');
         Route::post('versi/{versi}/nilai', [RencanaController::class, 'simpanNilai'])->name('pkp.rencana.nilai');
         Route::post('versi/{versi}/catatan', [RencanaController::class, 'simpanCatatan'])->name('pkp.rencana.catatan');

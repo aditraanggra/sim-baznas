@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');
+
+    Route::get('settings/two-factor', [TwoFactorController::class, 'tampilSetup'])->name('two-factor.setup');
+    Route::post('settings/two-factor', [TwoFactorController::class, 'aktifkan'])->name('two-factor.aktifkan');
+    Route::delete('settings/two-factor', [TwoFactorController::class, 'nonaktifkan'])->name('two-factor.nonaktifkan');
 
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
