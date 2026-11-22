@@ -1,3 +1,4 @@
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
@@ -32,8 +33,11 @@ export default function Impor({ jobs }: { jobs: Job[] }) {
                 <section className="rounded-xl border p-4">
                     <h2 className="mb-1 font-semibold">Impor Excel</h2>
                     <p className="text-muted-foreground mb-4 text-sm">
-                        Kolom wajib: <code>kode_pos</code>, <code>tipe_nilai</code>, <code>nilai</code>
-                        {data.jenis === 'realisasi' && ' (plus tahun, bulan)'}. Baris divalidasi per baris; impor ulang tidak menggandakan data.
+                        {data.jenis === 'muzakki' || data.jenis === 'mustahik'
+                            ? 'Kolom wajib: nama (opsional: kode, jenis, nik, telepon, desa, alamat, asnaf). Impor ulang tidak menggandakan data.'
+                            : data.jenis === 'upz'
+                              ? 'Kolom wajib: nama (opsional: kode, jenis_upz, desa, ketua, telepon, alamat). Impor ulang tidak menggandakan data.'
+                              : `Kolom wajib: kode_pos, tipe_nilai, nilai${data.jenis === 'realisasi' ? ' (plus tahun, bulan)' : ''}. Baris divalidasi per baris; impor ulang tidak menggandakan data.`}
                     </p>
 
                     <ol className="mb-4 flex gap-2 text-sm">
@@ -45,20 +49,35 @@ export default function Impor({ jobs }: { jobs: Job[] }) {
                     </ol>
 
                     <form onSubmit={kirim} className="grid gap-3 md:max-w-xl">
-                        <select className="rounded-md border px-3 py-2 text-sm" value={data.jenis} onChange={(e) => setData('jenis', e.target.value)}>
-                            <option value="rkat">RKAT</option>
-                            <option value="realisasi">Realisasi</option>
-                            <option value="pos">Pos Anggaran</option>
-                        </select>
-                        <input
-                            type="file"
-                            accept=".xlsx,.xls"
-                            className="text-sm"
-                            onChange={(e) => {
-                                setData('berkas', e.target.files?.[0] ?? null);
-                                setLangkah(2);
-                            }}
-                        />
+                        <div className="space-y-1.5">
+                            <Label htmlFor="impor-jenis">Jenis Data Impor</Label>
+                            <select
+                                id="impor-jenis"
+                                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                                value={data.jenis}
+                                onChange={(e) => setData('jenis', e.target.value)}
+                            >
+                                <option value="rkat">RKAT</option>
+                                <option value="realisasi">Realisasi</option>
+                                <option value="pos">Pos Anggaran</option>
+                                <option value="muzakki">Data Muzakki</option>
+                                <option value="mustahik">Data Mustahik</option>
+                                <option value="upz">Data UPZ</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="impor-berkas">Berkas Excel (.xlsx / .xls)</Label>
+                            <input
+                                id="impor-berkas"
+                                type="file"
+                                accept=".xlsx,.xls"
+                                className="text-sm"
+                                onChange={(e) => {
+                                    setData('berkas', e.target.files?.[0] ?? null);
+                                    setLangkah(2);
+                                }}
+                            />
+                        </div>
                         {errors.berkas && <p className="text-sm text-red-600">{errors.berkas}</p>}
                         <button type="submit" disabled={processing || !data.berkas} className="bg-primary text-primary-foreground w-fit rounded-md px-4 py-2 text-sm disabled:opacity-50">
                             {processing ? 'Memproses…' : 'Impor'}
@@ -90,7 +109,7 @@ export default function Impor({ jobs }: { jobs: Job[] }) {
                                     <td className="px-3 py-2 text-right tabular-nums">{j.total_baris}</td>
                                     <td className="px-3 py-2 text-right tabular-nums">{j.baris_sukses}</td>
                                     <td className="px-3 py-2 text-right tabular-nums">{j.baris_gagal}</td>
-                                    <td className="px-3 py-2">{j.created_at ? new Date(j.created_at).toLocaleString('id-ID') : '—'}</td>
+                                    <td className="px-3 py-2">{j.created_at ? new Date(j.created_at).toLocaleString('id-ID') : '-'}</td>
                                     <td className="px-3 py-2 text-right">
                                         <a className="underline" href={route('pengaturan.impor.hasil', j.id)}>
                                             Rincian

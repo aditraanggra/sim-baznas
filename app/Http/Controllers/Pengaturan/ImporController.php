@@ -38,7 +38,7 @@ class ImporController extends Controller
     public function simpan(Request $request, MulaiImpor $action): RedirectResponse
     {
         $validated = $request->validate([
-            'jenis' => ['required', 'in:rkat,realisasi,pos'],
+            'jenis' => ['required', 'in:rkat,realisasi,pos,muzakki,mustahik,upz'],
             'berkas' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
         ]);
 
@@ -61,9 +61,24 @@ class ImporController extends Controller
                 continue;
             }
 
-            $data = array_combine($header, array_map(fn ($v) => is_numeric($v) ? (int) $v : trim((string) $v), $row));
+            $potongRow = array_slice(array_pad($row, count($header), null), 0, count($header));
+            $data = [];
+            foreach ($header as $idx => $kolomNama) {
+                if ($kolomNama === '') {
+                    continue;
+                }
+                $nilaiMentah = $potongRow[$idx];
+                if (in_array($kolomNama, ['nik', 'telepon', 'kode', 'kode_pos', 'npwp', 'asnaf', 'desa', 'jenis_upz', 'nama'], true)) {
+                    $data[$kolomNama] = $nilaiMentah !== null ? trim((string) $nilaiMentah) : null;
+                } else {
+                    $data[$kolomNama] = is_numeric($nilaiMentah) ? (int) $nilaiMentah : trim((string) $nilaiMentah);
+                }
+            }
+
             $kunci = match ($validated['jenis']) {
                 'realisasi' => sprintf('%s/%s/%s/%s', $data['tahun'] ?? '', $data['bulan'] ?? '', $data['kode_pos'] ?? '', $data['tipe_nilai'] ?? ''),
+                'muzakki', 'mustahik' => sprintf('%s|%s|%s', $data['kode'] ?? '', $data['nik'] ?? '', $data['telepon'] ?? ($data['nama'] ?? $nomor)),
+                'upz' => sprintf('%s|%s', $data['kode'] ?? '', strtolower((string) ($data['nama'] ?? $nomor)).'|'.strtolower((string) ($data['desa'] ?? ''))),
                 default => sprintf('%s/%s', $data['kode_pos'] ?? '', $data['tipe_nilai'] ?? ''),
             };
 
