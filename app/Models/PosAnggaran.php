@@ -46,6 +46,16 @@ class PosAnggaran extends Model
         return $this->hasMany(PosAlias::class);
     }
 
+    public function pemetaan(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PosAnggaranPemetaan::class, 'pos_anggaran_id');
+    }
+
+    public function realisasiManual(): HasMany
+    {
+        return $this->hasMany(RealisasiManual::class, 'pos_anggaran_id');
+    }
+
     public function audits(): MorphMany
     {
         return $this->morphMany(AuditLog::class, 'entitas');

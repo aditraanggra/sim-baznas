@@ -25,7 +25,7 @@ class FinalkanPenerimaan extends Action
     public function jalankan(array $data): Penerimaan
     {
         return DB::transaction(function () use ($data): Penerimaan {
-            if (isset($data['muzakki_id'], $data['items'])) {
+            if (array_key_exists('items', $data) || array_key_exists('muzakki_id', $data) || empty($data['id'])) {
                 $penerimaan = $this->simpanDraft->jalankan($data);
             } else {
                 $tervalidasi = validator($data, [

@@ -17,6 +17,28 @@ class SimpanDraftPenerimaan extends Action
 
     public function jalankan(array $data): Penerimaan
     {
+        foreach (['id', 'muzakki_id', 'upz_id', 'metode_bayar_id', 'rekening_id', 'catatan'] as $kolom) {
+            if (array_key_exists($kolom, $data) && $data[$kolom] === '') {
+                $data[$kolom] = null;
+            }
+        }
+
+        if (isset($data['items']) && is_array($data['items'])) {
+            $data['items'] = array_map(function ($item) {
+                if (! is_array($item)) {
+                    return $item;
+                }
+                if (array_key_exists('sumber_dana_id', $item) && $item['sumber_dana_id'] === '') {
+                    $item['sumber_dana_id'] = null;
+                }
+                if (array_key_exists('keterangan', $item) && $item['keterangan'] === '') {
+                    $item['keterangan'] = null;
+                }
+
+                return $item;
+            }, $data['items']);
+        }
+
         $id = isset($data['id']) && $data['id'] !== '' ? (int) $data['id'] : null;
 
         $tervalidasi = validator($data, [

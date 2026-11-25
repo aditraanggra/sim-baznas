@@ -7,6 +7,7 @@ use App\Actions\Distribusi\ProsesLangkahPermohonan;
 use App\Actions\Distribusi\TolakPermohonan;
 use App\Http\Controllers\Controller;
 use App\Models\Asnaf;
+use App\Models\Desa;
 use App\Models\JenisDana;
 use App\Models\JenisDokumen;
 use App\Models\MetodeBayar;
@@ -18,6 +19,7 @@ use App\Models\RekeningBank;
 use App\Models\SumberDana;
 use App\Models\User;
 use App\Services\BerkasPrivatService;
+use App\Services\IdentitasPribadiService;
 use App\Services\Pdf\DokumenPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +40,7 @@ class PermohonanController extends Controller
             ->when($cari !== '', fn ($q) => $q->where(function ($sub) use ($cari): void {
                 $sub->where('nomor', 'ilike', "%{$cari}%")
                     ->orWhere('kode_tracking', 'ilike', "%{$cari}%")
+                    ->orWhere('pemohon_nama', 'ilike', "%{$cari}%")
                     ->orWhereHas('mustahik', fn ($m) => $m->where('nama', 'ilike', "%{$cari}%"));
             }))
             ->orderByDesc('tanggal')
@@ -52,6 +55,11 @@ class PermohonanController extends Controller
                 'kode_tracking' => $p->kode_tracking,
                 'tanggal' => $p->tanggal?->format('d/m/Y'),
                 'mustahik' => $p->mustahik?->nama,
+                'mustahik_kode' => $p->mustahik?->kode,
+                'pemohon_sama_mustahik' => (bool) $p->pemohon_sama_mustahik,
+                'pemohon_nama' => $p->pemohon_nama,
+                'pemohon_telepon' => $p->pemohon_telepon,
+                'pemohon_hubungan' => $p->pemohon_hubungan,
                 'program' => $p->program?->nama,
                 'sub_bidang' => $p->sub_bidang,
                 'jenis_dana' => $p->jenisDana?->nama,
@@ -63,7 +71,9 @@ class PermohonanController extends Controller
                 'kesiapan_keuangan' => $p->kesiapan_keuangan,
             ]),
             'filter' => ['cari' => $cari, 'status' => $status],
-            'mustahik_list' => Mustahik::where('aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama']),
+            'mustahik_list' => Mustahik::where('aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama', 'nik_masked', 'telepon']),
+            'desa_list' => Desa::with('kecamatan:id,nama')->where('aktif', true)->orderBy('nama')->get()
+                ->map(fn (Desa $d) => ['id' => $d->id, 'nama' => $d->nama, 'kecamatan' => $d->kecamatan?->nama]),
             'program_list' => Program::where('aktif', true)->orderBy('kode')->get(['id', 'kode', 'nama', 'sub_bidang']),
             'jenis_dana_list' => JenisDana::where('aktif', true)->orderBy('id')->get(['id', 'kode', 'nama', 'wajib_asnaf']),
             'asnaf_list' => Asnaf::where('aktif', true)->orderBy('urutan')->get(['id', 'kode', 'nama']),
@@ -111,7 +121,13 @@ class PermohonanController extends Controller
                 'mustahik_id' => $permohonan->mustahik_id,
                 'mustahik' => $permohonan->mustahik?->nama,
                 'mustahik_kode' => $permohonan->mustahik?->kode,
+                'mustahik_telepon' => $permohonan->mustahik?->telepon,
                 'mustahik_wilayah' => trim(($permohonan->mustahik?->desa?->nama ? "Desa {$permohonan->mustahik->desa->nama}, " : '').($permohonan->mustahik?->kecamatan?->nama ?? ''), ', '),
+                'pemohon_sama_mustahik' => (bool) $permohonan->pemohon_sama_mustahik,
+                'pemohon_nama' => $permohonan->pemohon_nama,
+                'pemohon_telepon' => $permohonan->pemohon_telepon,
+                'pemohon_hubungan' => $permohonan->pemohon_hubungan,
+                'pemohon_alamat' => $permohonan->pemohon_alamat,
                 'program' => $permohonan->program?->nama,
                 'sub_bidang' => $permohonan->sub_bidang,
                 'jenis_dana' => $permohonan->jenisDana?->nama,
@@ -211,21 +227,75 @@ class PermohonanController extends Controller
     public function lembarDisposisiPdf(Permohonan $permohonan, DokumenPdfService $pdfService): HttpResponse
     {
         $permohonan->load([
-            'mustahik:id,kode,nama',
+            'mustahik.desa',
+            'mustahik.kecamatan',
             'program:id,nama',
             'jenisDana:id,nama',
-            'asnaf:id,nama',
+            'asnaf:id,kode,nama',
             'disposisi.dariUser:id,name',
             'disposisi.keUser:id,name',
         ]);
 
         $namaBerkas = str_replace('/', '-', $permohonan->nomor).'-disposisi.pdf';
+        $urlTracking = route('publik.lacak-permohonan', ['kode_tracking' => $permohonan->kode_tracking]);
 
         return $pdfService->stream('pdf.lembar-disposisi', $namaBerkas, [
-            'judulDokumen' => 'Lembar Disposisi Permohonan Bantuan',
+            'judul' => 'LEMBAR DISPOSISI PERMOHONAN BANTUAN',
             'permohonan' => $permohonan,
             'disposisi' => $permohonan->disposisi,
-            'penandatangan' => [],
+            'qr_payload' => $urlTracking,
+            'qr_label' => 'Pindai QR untuk melacak status permohonan bantuan secara publik',
+        ], [
+            'kertas' => 'a4',
+            'orientasi' => 'portrait',
+            'tipografi' => 'sans',
+            'qr_payload' => $urlTracking,
+            'qr_label' => 'Pindai QR untuk melacak status permohonan bantuan secara publik',
         ]);
+    }
+
+    public function tandaTerimaPdf(
+        Request $request,
+        Permohonan $permohonan,
+        DokumenPdfService $pdfService,
+        IdentitasPribadiService $identitas,
+    ): HttpResponse {
+        $permohonan->load([
+            'mustahik.desa',
+            'mustahik.kecamatan',
+            'program:id,nama',
+            'jenisDana:id,nama',
+            'asnaf:id,kode,nama',
+            'pembuat:id,name',
+        ]);
+
+        $namaBerkas = str_replace('/', '-', $permohonan->nomor).'-tanda-terima.pdf';
+        $urlTracking = route('publik.lacak-permohonan', ['kode_tracking' => $permohonan->kode_tracking]);
+        $teleponAcuan = $permohonan->teleponPemohonEfektif() ?? $permohonan->mustahik?->telepon;
+        $empatDigit = $teleponAcuan ? $identitas->empatDigitAkhirTelepon($teleponAcuan) : null;
+        $teleponHint = $empatDigit ? "****{$empatDigit}" : '4 digit akhir telepon terdaftar';
+
+        $opsi = [
+            'kertas' => 'a5',
+            'orientasi' => 'portrait',
+            'tipografi' => 'sans',
+            'qr_payload' => $urlTracking,
+            'qr_label' => 'Pindai QR untuk melacak progres permohonan bantuan secara publik',
+        ];
+
+        $data = [
+            'judul' => 'TANDA TERIMA PERMOHONAN BANTUAN',
+            'permohonan' => $permohonan,
+            'url_tracking' => $urlTracking,
+            'telepon_hint' => $teleponHint,
+            'qr_payload' => $urlTracking,
+            'qr_label' => $opsi['qr_label'],
+        ];
+
+        if ($request->boolean('unduh')) {
+            return $pdfService->unduh('pdf.tanda-terima-permohonan', $namaBerkas, $data, $opsi);
+        }
+
+        return $pdfService->stream('pdf.tanda-terima-permohonan', $namaBerkas, $data, $opsi);
     }
 }

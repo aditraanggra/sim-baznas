@@ -3,12 +3,17 @@
 use App\Http\Controllers\Publik\TrackingPermohonanController;
 use App\Http\Controllers\Publik\VerifikasiKwitansiController;
 use App\Http\Controllers\Publik\VerifikasiSkUpzController;
+use App\Http\Controllers\Publik\VerifikasiSuratController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('publik')->name('publik.')->group(function () {
     Route::get('verifikasi-kwitansi/{token}', [VerifikasiKwitansiController::class, 'show'])
         ->middleware('throttle:30,1')
         ->name('verifikasi-kwitansi');
+
+    Route::get('verifikasi-surat/{uuid}', [VerifikasiSuratController::class, 'show'])
+        ->middleware('throttle:30,1')
+        ->name('verifikasi-surat');
 
     Route::get('verifikasi-sk-upz', [VerifikasiSkUpzController::class, 'index'])
         ->middleware('throttle:20,1')

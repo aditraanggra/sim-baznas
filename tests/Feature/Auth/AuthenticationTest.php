@@ -49,6 +49,14 @@ class AuthenticationTest extends TestCase
         $response = $this->actingAs($user)->post('/logout');
 
         $this->assertGuest();
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('login', absolute: false));
+    }
+
+    public function test_home_redirects_guest_to_login_and_authenticated_to_dashboard()
+    {
+        $this->get('/')->assertRedirect(route('login', absolute: false));
+
+        $user = User::factory()->create();
+        $this->actingAs($user)->get('/')->assertRedirect(route('dashboard', absolute: false));
     }
 }

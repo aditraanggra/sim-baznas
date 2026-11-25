@@ -9,6 +9,7 @@ use App\Models\DanaKelompok;
 use App\Models\Desa;
 use App\Models\JenisDana;
 use App\Models\JenisDokumen;
+use App\Models\JenisSurat;
 use App\Models\JenisUpz;
 use App\Models\Kecamatan;
 use App\Models\MetodeBayar;
@@ -241,6 +242,24 @@ class MasterDataRegistry
                 'aturan' => fn (?int $id) => [
                     'kode' => ['required', 'string', 'max:32', Rule::unique('jenis_upz', 'kode')->ignore($id)],
                     'nama' => ['required', 'string', 'max:128'],
+                ],
+            ],
+            'jenis_surat' => [
+                'label' => 'Jenis Surat',
+                'deskripsi' => 'Kategori surat dinas keluar dan template format nomornya.',
+                'model' => JenisSurat::class,
+                'urutan_default' => 'kode',
+                'kolom' => [
+                    ['key' => 'kode', 'label' => 'Kode', 'type' => 'text', 'required' => true, 'max' => 24],
+                    ['key' => 'nama', 'label' => 'Nama Jenis Surat', 'type' => 'text', 'required' => true, 'max' => 128],
+                    ['key' => 'format_nomor', 'label' => 'Format Nomor (Opsional)', 'type' => 'text', 'required' => false, 'max' => 128],
+                    ['key' => 'pisah_urutan', 'label' => 'Pisah Urutan Nomor per Tahun', 'type' => 'boolean', 'required' => false],
+                ],
+                'aturan' => fn (?int $id) => [
+                    'kode' => ['required', 'string', 'max:24', Rule::unique('jenis_surat', 'kode')->ignore($id)],
+                    'nama' => ['required', 'string', 'max:128'],
+                    'format_nomor' => ['nullable', 'string', 'max:128'],
+                    'pisah_urutan' => ['boolean'],
                 ],
             ],
             'desa' => [

@@ -72,7 +72,7 @@ class CetakKwitansi extends Action
             $urlVerifikasi = route('publik.verifikasi-kwitansi', $kwitansi->token_verifikasi);
 
             $pdf = $this->pdfService->buat('pdf.kwitansi-penerimaan', [
-                'judul' => 'KWITANSI PENERIMAAN ZIS',
+                'judul' => 'BUKTI SETORAN ZIS',
                 'nomor' => $kwitansi->nomor,
                 'kwitansi' => $kwitansi,
                 'penerimaan' => $penerimaan,
@@ -84,7 +84,7 @@ class CetakKwitansi extends Action
                 ],
             ], [
                 'kertas' => 'a5',
-                'orientasi' => 'landscape',
+                'orientasi' => 'portrait',
                 'tipografi' => 'sans',
                 'draft' => $penerimaan->status === 'batal',
                 'cetak_ulang_ke' => $cetakKe > 1 ? $cetakKe : null,

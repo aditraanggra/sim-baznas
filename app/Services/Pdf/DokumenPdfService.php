@@ -71,6 +71,16 @@ class DokumenPdfService
 
     private function logoDataUri(): string
     {
+        $jalurLogo = public_path('images/logo-baznas.png');
+        if (! file_exists($jalurLogo)) {
+            $jalurLogo = base_path('docs/Logo BAZNAS.png');
+        }
+
+        if (file_exists($jalurLogo)) {
+            $data = file_get_contents($jalurLogo);
+            return 'data:image/png;base64,'.base64_encode($data);
+        }
+
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">'
             .'<circle cx="32" cy="32" r="30" fill="#ffffff" stroke="#000000" stroke-width="2.5"/>'
             .'<circle cx="32" cy="32" r="24" fill="none" stroke="#000000" stroke-width="1"/>'

@@ -11,7 +11,9 @@ interface HasilLacak {
     kode_tracking: string;
     nomor: string;
     tanggal: string | null;
+    pemohon_sama_mustahik: boolean;
     pemohon_samaran: string | null;
+    penerima_manfaat_samaran: string | null;
     program: string;
     status_publik: string;
     judul_status: string;
@@ -37,7 +39,7 @@ export default function LacakPermohonan({ kode_tracking, telepon_4, sudah_dicari
 
     const cari = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(route('publik.lacak-permohonan'), { kode_tracking: kode, telepon_4: telp4 }, { preserveState: true });
+        router.get(route('publik.lacak-permohonan'), { kode_tracking: kode, telepon_4: telp4, cari: 1 }, { preserveState: true });
     };
 
     return (
@@ -91,7 +93,11 @@ export default function LacakPermohonan({ kode_tracking, telepon_4, sudah_dicari
                                     <p className="text-muted-foreground text-xs">Kode Tracking {hasil.kode_tracking}</p>
                                     <h2 className="text-foreground text-lg font-semibold">{hasil.judul_status}</h2>
                                     <p className="text-muted-foreground text-sm">
-                                        Pemohon: {hasil.pemohon_samaran ?? '-'} · Program: {hasil.program}
+                                        Pemohon: {hasil.pemohon_samaran ?? '-'}
+                                        {!hasil.pemohon_sama_mustahik && hasil.penerima_manfaat_samaran
+                                            ? ` · Penerima Manfaat: ${hasil.penerima_manfaat_samaran}`
+                                            : ''}
+                                        {` · Program: ${hasil.program}`}
                                     </p>
                                 </div>
                                 <StatusBadge

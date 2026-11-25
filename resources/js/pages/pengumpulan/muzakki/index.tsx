@@ -19,8 +19,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface MuzakkiRow {
     id: number;
     kode: string;
+    npwz: string | null;
     jenis: 'perorangan' | 'lembaga';
     nama: string;
+    jenis_kelamin: 'L' | 'P' | null;
     nik_masked: string | null;
     npwp: string | null;
     telepon: string | null;
@@ -61,8 +63,10 @@ export default function MuzakkiIndex({ muzakki, kecamatan_list, desa_list, filte
 
     const form = useForm({
         id: '',
+        npwz: '',
         jenis: 'perorangan',
         nama: '',
+        jenis_kelamin: '',
         nik: '',
         npwp: '',
         telepon: '',
@@ -102,8 +106,10 @@ export default function MuzakkiIndex({ muzakki, kecamatan_list, desa_list, filte
         setDuplikat([]);
         form.setData({
             id: '',
+            npwz: '',
             jenis: 'perorangan',
             nama: '',
+            jenis_kelamin: '',
             nik: '',
             npwp: '',
             telepon: '',
@@ -120,8 +126,10 @@ export default function MuzakkiIndex({ muzakki, kecamatan_list, desa_list, filte
         setDuplikat([]);
         form.setData({
             id: String(m.id),
+            npwz: m.npwz ?? '',
             jenis: m.jenis,
             nama: m.nama,
+            jenis_kelamin: m.jenis_kelamin ?? '',
             nik: '',
             npwp: m.npwp ?? '',
             telepon: m.telepon ?? '',
@@ -154,15 +162,17 @@ export default function MuzakkiIndex({ muzakki, kecamatan_list, desa_list, filte
                     </Link>
                     <p className="text-muted-foreground text-xs">
                         {m.kode} · {m.jenis === 'lembaga' ? 'Lembaga' : 'Perorangan'}
+                        {m.jenis === 'perorangan' && m.jenis_kelamin ? ` · ${m.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}` : ''}
                     </p>
                 </div>
             ),
         },
         {
             id: 'identitas',
-            header: 'NIK / Telepon',
+            header: 'NPWZ / NIK / Telepon',
             cell: (m) => (
                 <div className="text-xs tabular-nums">
+                    {m.npwz && <p className="text-foreground font-medium">NPWZ: {m.npwz}</p>}
                     <p className="text-foreground">{m.nik_masked ?? (m.npwp ? `NPWP: ${m.npwp}` : '-')}</p>
                     <p className="text-muted-foreground">{m.telepon ?? '-'}</p>
                 </div>
@@ -354,6 +364,36 @@ export default function MuzakkiIndex({ muzakki, kecamatan_list, desa_list, filte
                             <Label htmlFor="mzk-nama">Nama Lengkap / Lembaga (wajib)</Label>
                             <Input id="mzk-nama" required value={form.data.nama} onChange={(e) => form.setData('nama', e.target.value)} className="h-9" />
                             {form.errors.nama && <p className="text-destructive text-xs">{form.errors.nama}</p>}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="mzk-npwz">NPWZ (Nomor Pokok Wajib Zakat)</Label>
+                                <Input
+                                    id="mzk-npwz"
+                                    value={form.data.npwz}
+                                    onChange={(e) => form.setData('npwz', e.target.value)}
+                                    placeholder="Nomor Pokok Wajib Zakat"
+                                    className="h-9"
+                                />
+                                {form.errors.npwz && <p className="text-destructive text-xs">{form.errors.npwz}</p>}
+                            </div>
+
+                            {form.data.jenis === 'perorangan' && (
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="mzk-jk">Jenis Kelamin</Label>
+                                    <Select value={form.data.jenis_kelamin} onValueChange={(v) => form.setData('jenis_kelamin', v)}>
+                                        <SelectTrigger id="mzk-jk" className="h-9">
+                                            <SelectValue placeholder="Pilih jenis kelamin" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="L">Laki-laki</SelectItem>
+                                            <SelectItem value="P">Perempuan</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {form.errors.jenis_kelamin && <p className="text-destructive text-xs">{form.errors.jenis_kelamin}</p>}
+                                </div>
+                            )}
                         </div>
 
                         {form.data.jenis === 'perorangan' ? (

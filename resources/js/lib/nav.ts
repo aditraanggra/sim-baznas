@@ -1,5 +1,6 @@
 import { type NavGroup } from '@/types';
 import {
+    Archive,
     BookOpen,
     Building2,
     CheckSquare,
@@ -7,14 +8,17 @@ import {
     Database,
     FileCheck,
     FileSpreadsheet,
+    FileText,
     FolderTree,
     Gauge,
     HandHeart,
     Inbox,
     LayoutGrid,
+    Mail,
     PlusCircle,
     Receipt,
     ScrollText,
+    Send,
     ShieldCheck,
     Users,
     Wallet,
@@ -58,11 +62,19 @@ export const navPerBidang: Record<string, NavGroup[]> = {
     ],
     umum: [
         {
-            title: 'UPZ (Unit Pengumpul Zakat)',
+            title: 'Umum & UPZ',
             items: [
                 { title: 'Dasbor Bidang Umum', url: '/umum', icon: Building2 },
                 { title: 'Data UPZ & SK UPZ', url: '/umum/upz', icon: ShieldCheck },
-                { title: 'Laporan Setoran UPZ', url: '/umum/upz/laporan-setoran', icon: Coins },
+            ],
+        },
+        {
+            title: 'Administrasi & Persuratan',
+            items: [
+                { title: 'Surat Masuk', url: '/umum/surat/masuk', icon: Mail },
+                { title: 'Surat Keluar', url: '/umum/surat/keluar', icon: Send },
+                { title: 'Arsip & Agenda Surat', url: '/umum/surat/arsip', icon: Archive },
+                { title: 'Template & Jenis Surat', url: '/umum/surat/template', icon: FileText },
             ],
         },
     ],
@@ -71,9 +83,11 @@ export const navPerBidang: Record<string, NavGroup[]> = {
             title: 'Perencanaan & Pelaporan',
             items: [
                 { title: 'Dasbor PKP', url: '/pkp', icon: LayoutGrid },
+                { title: 'Tahun Anggaran & Kegiatan', url: '/pkp/kegiatan', icon: FolderTree },
                 { title: 'RKAT', url: '/pkp/rencana', icon: BookOpen },
-                { title: 'Realisasi', url: '/pkp/realisasi', icon: FileSpreadsheet },
+                { title: 'RKAT vs Realisasi', url: '/pkp/realisasi', icon: FileSpreadsheet },
                 { title: 'Kinerja', url: '/pkp/kinerja', icon: Gauge },
+                { title: 'Laporan Setoran UPZ', url: '/pkp/laporan-setoran-upz', icon: Coins },
             ],
         },
         {

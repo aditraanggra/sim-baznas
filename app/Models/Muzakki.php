@@ -16,8 +16,10 @@ class Muzakki extends Model
 
     protected $fillable = [
         'kode',
+        'npwz',
         'jenis',
         'nama',
+        'jenis_kelamin',
         'nik_encrypted',
         'nik_hash',
         'nik_masked',

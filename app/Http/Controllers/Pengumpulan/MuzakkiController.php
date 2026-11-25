@@ -35,6 +35,7 @@ class MuzakkiController extends Controller
                 $q->where(function ($sub) use ($cari, $nikHashCari): void {
                     $sub->where('nama', 'ilike', "%{$cari}%")
                         ->orWhere('kode', 'ilike', "%{$cari}%")
+                        ->orWhere('npwz', 'ilike', "%{$cari}%")
                         ->orWhere('telepon', 'ilike', "%{$cari}%");
                     if ($nikHashCari !== null) {
                         $sub->orWhere('nik_hash', $nikHashCari);
@@ -49,8 +50,10 @@ class MuzakkiController extends Controller
             'muzakki' => $daftar->through(fn (Muzakki $m) => [
                 'id' => $m->id,
                 'kode' => $m->kode,
+                'npwz' => $m->npwz,
                 'jenis' => $m->jenis,
                 'nama' => $m->nama,
+                'jenis_kelamin' => $m->jenis_kelamin,
                 'nik_masked' => $m->nik_masked,
                 'npwp' => $m->npwp,
                 'telepon' => $m->telepon,
@@ -93,7 +96,9 @@ class MuzakkiController extends Controller
 
         $muzakki = $action->jalankan($request->all());
 
-        $redirect = back()->with('sukses', "Data muzakki {$muzakki->nama} ({$muzakki->kode}) tersimpan.");
+        $redirect = back()
+            ->with('sukses', "Data muzakki {$muzakki->nama} ({$muzakki->kode}) tersimpan.")
+            ->with('muzakki_baru_id', $muzakki->id);
         if ($duplikat !== []) {
             $redirect->with('peringatan', 'Ditemukan muzakki lain dengan telepon yang sama. Periksa data untuk mencegah duplikasi.');
         }
@@ -126,8 +131,10 @@ class MuzakkiController extends Controller
             'muzakki' => [
                 'id' => $muzakki->id,
                 'kode' => $muzakki->kode,
+                'npwz' => $muzakki->npwz,
                 'jenis' => $muzakki->jenis,
                 'nama' => $muzakki->nama,
+                'jenis_kelamin' => $muzakki->jenis_kelamin,
                 'nik_masked' => $muzakki->nik_masked,
                 'npwp' => $muzakki->npwp,
                 'telepon' => $muzakki->telepon,

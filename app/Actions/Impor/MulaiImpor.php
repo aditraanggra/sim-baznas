@@ -5,6 +5,7 @@ namespace App\Actions\Impor;
 use App\Actions\Action;
 use App\Actions\Distribusi\SimpanMustahik;
 use App\Actions\Pengumpulan\SimpanMuzakki;
+use App\Actions\Perencanaan\SimpanRealisasiManual;
 use App\Actions\Upz\SimpanUpz;
 use App\Models\Asnaf;
 use App\Models\Concerns\MencatatAudit;
@@ -14,6 +15,7 @@ use App\Models\ImportRow;
 use App\Models\JenisUpz;
 use App\Models\Mustahik;
 use App\Models\Muzakki;
+use App\Models\PosAnggaran;
 use App\Models\Upz;
 use App\Services\IdentitasPribadiService;
 use Illuminate\Support\Facades\Auth;
@@ -53,7 +55,7 @@ class MulaiImpor extends Action
         foreach ($data['baris'] as $baris) {
             $galat = $this->validasiBaris($data['jenis'], $baris['data']);
 
-            if ($galat === [] && in_array($data['jenis'], ['muzakki', 'mustahik', 'upz'], true)) {
+            if ($galat === [] && in_array($data['jenis'], ['realisasi', 'muzakki', 'mustahik', 'upz'], true)) {
                 $galat = $this->upsertEntitas($data['jenis'], $baris['data']);
             }
 
@@ -104,8 +106,10 @@ class MulaiImpor extends Action
             ],
             'muzakki' => [
                 'kode' => ['nullable', 'string', 'max:32'],
+                'npwz' => ['nullable', 'string', 'max:32'],
                 'jenis' => ['nullable', 'in:perorangan,lembaga'],
                 'nama' => ['required', 'string', 'max:160'],
+                'jenis_kelamin' => ['nullable', 'in:L,P'],
                 'nik' => ['nullable', 'digits:16'],
                 'telepon' => ['nullable', 'string', 'max:32'],
                 'npwp' => ['nullable', 'string', 'max:32'],
@@ -148,6 +152,29 @@ class MulaiImpor extends Action
     private function upsertEntitas(string $jenis, array $row): array
     {
         try {
+            if ($jenis === 'realisasi') {
+                $pos = PosAnggaran::where('kode', trim((string) $row['kode_pos']))
+                    ->where('tipe_nilai', trim((string) $row['tipe_nilai']))
+                    ->first();
+
+                if (! $pos) {
+                    return [];
+                }
+
+                app(SimpanRealisasiManual::class)->jalankan([
+                    'tahun' => (int) $row['tahun'],
+                    'bulan' => (int) $row['bulan'],
+                    'pos_anggaran_id' => $pos->id,
+                    'nilai' => (int) $row['nilai'],
+                    'sumber' => 'impor',
+                    'catatan' => isset($row['catatan']) && trim((string) $row['catatan']) !== ''
+                        ? trim((string) $row['catatan'])
+                        : 'Impor realisasi historis',
+                ]);
+
+                return [];
+            }
+
             $identitas = app(IdentitasPribadiService::class);
 
             if ($jenis === 'muzakki') {
@@ -167,8 +194,10 @@ class MulaiImpor extends Action
                 app(SimpanMuzakki::class)->jalankan([
                     'id' => $eksisting?->id,
                     'kode' => $kode ?? $eksisting?->kode,
+                    'npwz' => $row['npwz'] ?? $eksisting?->npwz,
                     'jenis' => ($row['jenis'] ?? '') !== '' ? $row['jenis'] : 'perorangan',
                     'nama' => $row['nama'],
+                    'jenis_kelamin' => $row['jenis_kelamin'] ?? $eksisting?->jenis_kelamin,
                     'nik' => $row['nik'] ?? null,
                     'npwp' => $row['npwp'] ?? null,
                     'telepon' => $row['telepon'] ?? null,

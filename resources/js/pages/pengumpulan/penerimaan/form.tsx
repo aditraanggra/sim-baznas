@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
-import { Plus, Printer, Save, Trash2 } from 'lucide-react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, Plus, Printer, Save, Trash2 } from 'lucide-react';
 import * as React from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -45,7 +45,7 @@ interface Props {
         catatan: string | null;
         items: { sumber_dana_id: number; jumlah: number; keterangan: string }[];
     } | null;
-    muzakki_list: { id: number; kode: string; nama: string; nik_masked: string | null; telepon: string | null }[];
+    muzakki_list: { id: number; kode: string; npwz: string | null; nama: string; nik_masked: string | null; telepon: string | null }[];
     sumber_dana_list: { id: number; kode: string; nama: string; jenis_dana: string | null }[];
     metode_bayar_list: { id: number; kode: string; nama: string; butuh_rekening: boolean }[];
     rekening_list: { id: number; bank: string; no_rekening: string; atas_nama: string }[];
@@ -80,9 +80,11 @@ export default function PenerimaanForm({
     desa_list,
 }: Props) {
     const hariIni = new Date().toISOString().slice(0, 10);
+    const { flash } = usePage<{ flash?: { muzakki_baru_id?: number | null } }>().props;
     const [dialogMuzakki, setDialogMuzakki] = React.useState(false);
     const [waktuAutosave, setWaktuAutosave] = React.useState<string | null>(null);
     const itemSumberRefs = React.useRef<(HTMLSelectElement | null)[]>([]);
+    const lastMuzakkiBaruRef = React.useRef<number | null>(null);
 
     const awalItems: ItemBaris[] = draft?.items?.length
         ? draft.items.map((i) => ({ sumber_dana_id: String(i.sumber_dana_id), jumlah: i.jumlah, keterangan: i.keterangan }))
@@ -102,21 +104,54 @@ export default function PenerimaanForm({
     const formMuzakki = useForm({
         jenis: 'perorangan',
         nama: '',
+        npwz: '',
+        jenis_kelamin: '',
         nik: '',
         telepon: '',
         desa_id: '',
         alamat: '',
     });
 
-    // Pulihkan autosave lokal jika membuat transaksi baru
+    const setFormData = form.setData;
+
+    // Sinkronkan ketika membuka halaman lanjutan draft (?draft_id=X)
+    React.useEffect(() => {
+        if (!draft) return;
+        setFormData({
+            id: String(draft.id),
+            tanggal: draft.tanggal ?? hariIni,
+            muzakki_id: String(draft.muzakki_id),
+            upz_id: draft.upz_id ? String(draft.upz_id) : '',
+            metode_bayar_id: String(draft.metode_bayar_id),
+            rekening_id: draft.rekening_id ? String(draft.rekening_id) : '',
+            catatan: draft.catatan ?? '',
+            items: draft.items.length
+                ? draft.items.map((i) => ({
+                      sumber_dana_id: String(i.sumber_dana_id),
+                      jumlah: i.jumlah,
+                      keterangan: i.keterangan ?? '',
+                  }))
+                : [{ sumber_dana_id: sumber_dana_list[0] ? String(sumber_dana_list[0].id) : '', jumlah: 0, keterangan: '' }],
+        });
+    }, [draft, hariIni, setFormData, sumber_dana_list]);
+
+    // Pilih otomatis muzakki yang baru saja dibuat lewat dialog tambah cepat
+    React.useEffect(() => {
+        if (flash?.muzakki_baru_id && flash.muzakki_baru_id !== lastMuzakkiBaruRef.current) {
+            lastMuzakkiBaruRef.current = flash.muzakki_baru_id;
+            setFormData('muzakki_id', String(flash.muzakki_baru_id));
+        }
+    }, [flash?.muzakki_baru_id, setFormData]);
+
+    // Pulihkan autosave lokal jika membuat transaksi baru (bukan edit draft server)
     React.useEffect(() => {
         if (draft) return;
         try {
             const tersimpan = localStorage.getItem(AUTOSAVE_KEY);
             if (!tersimpan) return;
             const parsed = JSON.parse(tersimpan) as Partial<PenerimaanFormData>;
-            if (parsed.items && parsed.items.length > 0) {
-                form.setData((prev) => ({ ...prev, ...parsed }));
+            if (parsed.items && parsed.items.length > 0 && !parsed.id) {
+                setFormData((prev) => ({ ...prev, ...parsed, id: '' }));
             }
         } catch {
             // Abaikan JSON rusak
@@ -124,8 +159,9 @@ export default function PenerimaanForm({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Autosave perubahan draft secara otomatis ke localStorage
+    // Autosave perubahan draft secara otomatis ke localStorage untuk input baru
     React.useEffect(() => {
+        if (draft) return;
         const timer = window.setTimeout(() => {
             try {
                 localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(form.data));
@@ -135,7 +171,7 @@ export default function PenerimaanForm({
             }
         }, 600);
         return () => window.clearTimeout(timer);
-    }, [form.data]);
+    }, [draft, form.data]);
 
     const metodeTerpilih = React.useMemo(
         () => metode_bayar_list.find((m) => String(m.id) === form.data.metode_bayar_id) ?? null,
@@ -147,7 +183,7 @@ export default function PenerimaanForm({
             muzakki_list.map((m) => ({
                 value: String(m.id),
                 label: m.nama,
-                sublabel: [m.kode, m.nik_masked, m.telepon].filter(Boolean).join(' · '),
+                sublabel: [m.kode, m.npwz ? `NPWZ ${m.npwz}` : null, m.nik_masked, m.telepon].filter(Boolean).join(' · '),
             })),
         [muzakki_list],
     );
@@ -202,14 +238,37 @@ export default function PenerimaanForm({
         }
     };
 
+    const bersihkanPayload = (data: PenerimaanFormData) => {
+        const barisBerisi = data.items.filter((it) => Number(it.jumlah) > 0 || it.keterangan.trim() !== '');
+        const itemsFinal = barisBerisi.length > 0 ? barisBerisi : data.items;
+
+        return {
+            id: data.id || null,
+            tanggal: data.tanggal,
+            muzakki_id: data.muzakki_id || null,
+            upz_id: data.upz_id || null,
+            metode_bayar_id: data.metode_bayar_id || null,
+            rekening_id: data.rekening_id || null,
+            catatan: data.catatan || null,
+            items: itemsFinal.map((it) => ({
+                sumber_dana_id: it.sumber_dana_id || null,
+                jumlah: Number(it.jumlah) || 0,
+                keterangan: it.keterangan || null,
+            })),
+        };
+    };
+
     const simpanDraft = () => {
+        form.transform(bersihkanPayload);
         form.post(route('pengumpulan.penerimaan.draft'), {
             preserveScroll: true,
+            onSuccess: () => localStorage.removeItem(AUTOSAVE_KEY),
         });
     };
 
     const finalkanDanCetak = (e: React.FormEvent) => {
         e.preventDefault();
+        form.transform(bersihkanPayload);
         form.post(route('pengumpulan.penerimaan.final'), {
             preserveScroll: true,
             onSuccess: () => localStorage.removeItem(AUTOSAVE_KEY),
@@ -223,10 +282,12 @@ export default function PenerimaanForm({
             onSuccess: () => {
                 setDialogMuzakki(false);
                 formMuzakki.reset();
-                router.reload({ only: ['muzakki_list'] });
             },
         });
     };
+
+    const daftarGalat = Object.entries(form.errors as Record<string, string>).filter(([, v]) => Boolean(v));
+    const errorsMap = form.errors as Record<string, string>;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -238,6 +299,20 @@ export default function PenerimaanForm({
                     description="Tekan Enter di kolom nominal atau keterangan untuk menambah baris item penerimaan berikutnya."
                     breadcrumbs={breadcrumbs}
                 />
+
+                {daftarGalat.length > 0 && (
+                    <div role="alert" className="bg-destructive-soft border-destructive/30 text-destructive rounded-xl border p-4 text-sm">
+                        <div className="flex items-center gap-2 font-semibold">
+                            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            <span>Penerimaan belum dapat diproses. Periksa kembali isian berikut:</span>
+                        </div>
+                        <ul className="mt-1.5 list-disc space-y-0.5 pl-6 text-xs">
+                            {daftarGalat.map(([kunci, pesan]) => (
+                                <li key={kunci}>{pesan}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="space-y-5 lg:col-span-2">
@@ -255,24 +330,37 @@ export default function PenerimaanForm({
                                         onChange={(e) => form.setData('tanggal', e.target.value)}
                                         className="h-9"
                                     />
-                                    {form.errors.tanggal && <p className="text-destructive text-xs">{form.errors.tanggal}</p>}
+                                    {errorsMap.tanggal && <p className="text-destructive text-xs">{errorsMap.tanggal}</p>}
                                 </div>
 
                                 <div className="space-y-1.5 sm:col-span-2">
-                                    <Label htmlFor="pnr-muzakki">Pilih Muzakki (wajib)</Label>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <Label htmlFor="pnr-muzakki">Pilih Muzakki (wajib)</Label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                formMuzakki.clearErrors();
+                                                setDialogMuzakki(true);
+                                            }}
+                                            className="text-primary text-xs font-medium hover:underline"
+                                        >
+                                            + Tambah Muzakki Baru
+                                        </button>
+                                    </div>
                                     <Combobox
                                         id="pnr-muzakki"
                                         options={opsiMuzakki}
                                         value={form.data.muzakki_id}
                                         onChange={(v) => form.setData('muzakki_id', v)}
-                                        placeholder="Cari nama, kode, atau telepon muzakki..."
+                                        placeholder="Cari nama, kode, NPWZ, atau telepon muzakki..."
                                         createNewLabel="Tambah muzakki baru"
                                         onCreateNew={(q) => {
+                                            formMuzakki.clearErrors();
                                             formMuzakki.setData('nama', q);
                                             setDialogMuzakki(true);
                                         }}
                                     />
-                                    {form.errors.muzakki_id && <p className="text-destructive text-xs">{form.errors.muzakki_id}</p>}
+                                    {errorsMap.muzakki_id && <p className="text-destructive text-xs">{errorsMap.muzakki_id}</p>}
                                 </div>
                             </div>
                         </section>
@@ -317,11 +405,15 @@ export default function PenerimaanForm({
                                                             </option>
                                                         ))}
                                                     </select>
+                                                    {errorsMap[`items.${idx}.sumber_dana_id`] && (
+                                                        <p className="text-destructive mt-1 text-xs">{errorsMap[`items.${idx}.sumber_dana_id`]}</p>
+                                                    )}
                                                 </td>
                                                 <td className="px-2 py-2 align-top" onKeyDown={(e) => tanganiEnterBaris(e, idx)}>
                                                     <InputRupiah
                                                         value={item.jumlah}
                                                         onChange={(nilai) => ubahItem(idx, { jumlah: nilai })}
+                                                        error={errorsMap[`items.${idx}.jumlah`]}
                                                     />
                                                 </td>
                                                 <td className="px-2 py-2 align-top">
@@ -352,7 +444,7 @@ export default function PenerimaanForm({
                                     </tbody>
                                 </table>
                             </div>
-                            {form.errors.items && <p className="text-destructive text-xs">{form.errors.items}</p>}
+                            {errorsMap.items && <p className="text-destructive text-xs">{errorsMap.items}</p>}
                         </section>
 
                         <section className="bg-card border-border space-y-4 rounded-xl border p-5">
@@ -373,6 +465,7 @@ export default function PenerimaanForm({
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                    {errorsMap.metode_bayar_id && <p className="text-destructive text-xs">{errorsMap.metode_bayar_id}</p>}
                                 </div>
 
                                 {metodeTerpilih?.butuh_rekening && (
@@ -390,7 +483,7 @@ export default function PenerimaanForm({
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {form.errors.rekening_id && <p className="text-destructive text-xs">{form.errors.rekening_id}</p>}
+                                        {errorsMap.rekening_id && <p className="text-destructive text-xs">{errorsMap.rekening_id}</p>}
                                     </div>
                                 )}
 
@@ -459,10 +552,10 @@ export default function PenerimaanForm({
             </form>
 
             <Dialog open={dialogMuzakki} onOpenChange={setDialogMuzakki}>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Tambah Cepat Muzakki</DialogTitle>
-                        <DialogDescription>Data muzakki baru langsung tersedia di daftar pilihan form penerimaan.</DialogDescription>
+                        <DialogDescription>Data muzakki baru langsung tersedia dan terpilih di form penerimaan.</DialogDescription>
                     </DialogHeader>
 
                     <form onSubmit={simpanMuzakkiCepat} className="space-y-3">
@@ -482,6 +575,37 @@ export default function PenerimaanForm({
                         <div className="space-y-1.5">
                             <Label htmlFor="qm-nama">Nama Lengkap / Lembaga (wajib)</Label>
                             <Input id="qm-nama" required value={formMuzakki.data.nama} onChange={(e) => formMuzakki.setData('nama', e.target.value)} className="h-9" />
+                            {formMuzakki.errors.nama && <p className="text-destructive text-xs">{formMuzakki.errors.nama}</p>}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="qm-npwz">NPWZ</Label>
+                                <Input
+                                    id="qm-npwz"
+                                    value={formMuzakki.data.npwz}
+                                    onChange={(e) => formMuzakki.setData('npwz', e.target.value)}
+                                    placeholder="Nomor Pokok Wajib Zakat"
+                                    className="h-9"
+                                />
+                                {formMuzakki.errors.npwz && <p className="text-destructive text-xs">{formMuzakki.errors.npwz}</p>}
+                            </div>
+
+                            {formMuzakki.data.jenis === 'perorangan' && (
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="qm-jk">Jenis Kelamin</Label>
+                                    <Select value={formMuzakki.data.jenis_kelamin} onValueChange={(v) => formMuzakki.setData('jenis_kelamin', v)}>
+                                        <SelectTrigger id="qm-jk" className="h-9">
+                                            <SelectValue placeholder="Pilih L/P" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="L">Laki-laki</SelectItem>
+                                            <SelectItem value="P">Perempuan</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {formMuzakki.errors.jenis_kelamin && <p className="text-destructive text-xs">{formMuzakki.errors.jenis_kelamin}</p>}
+                                </div>
+                            )}
                         </div>
 
                         {formMuzakki.data.jenis === 'perorangan' && (
@@ -503,7 +627,7 @@ export default function PenerimaanForm({
                                 Batal
                             </Button>
                             <Button type="submit" disabled={formMuzakki.processing} className="h-9">
-                                Simpan Muzakki
+                                {formMuzakki.processing ? 'Menyimpan...' : 'Simpan Muzakki'}
                             </Button>
                         </DialogFooter>
                     </form>

@@ -1,4 +1,3 @@
-import AppLogoIcon from '@/components/app-logo-icon';
 import { Toaster } from '@/components/ui/sonner';
 import { cn } from '@/lib/utils';
 import { Head, Link } from '@inertiajs/react';
@@ -31,8 +30,8 @@ export function PublicLayout({
             <header className="bg-card border-brand border-b-2">
                 <div className={cn('mx-auto flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6', maksLebar)}>
                     <Link href="/" className="flex min-w-0 items-center gap-3">
-                        <div className="bg-brand flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white">
-                            <AppLogoIcon className="h-5 w-5 fill-current" />
+                        <div className="border-border/80 flex shrink-0 items-center justify-center rounded-lg border bg-white px-2 py-1 shadow-sm">
+                            <img src="/images/logo-baznas.png" alt="Logo BAZNAS" className="h-7 w-auto object-contain" />
                         </div>
                         <div className="min-w-0">
                             <p className="font-display text-foreground truncate text-sm font-semibold sm:text-base">

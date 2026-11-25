@@ -16,7 +16,7 @@ class TrackingPermohonanController extends Controller
         $kode = strtoupper(trim($request->string('kode_tracking')->toString()));
         $telepon4 = preg_replace('/\D+/', '', $request->string('telepon_4')->toString()) ?? '';
 
-        $sudahDicari = $kode !== '' || $telepon4 !== '';
+        $sudahDicari = $telepon4 !== '' || $request->boolean('cari');
         $hasil = null;
         $pesanError = null;
 
@@ -29,19 +29,31 @@ class TrackingPermohonanController extends Controller
                     ->where('kode_tracking', $kode)
                     ->first();
 
-                $akhirTelepon = $permohonan?->mustahik?->telepon
-                    ? $identitas->empatDigitAkhirTelepon($permohonan->mustahik->telepon)
-                    : null;
+                $kandidatTelepon = collect([
+                    $permohonan?->pemohon_telepon,
+                    $permohonan?->mustahik?->telepon,
+                ])
+                    ->map(fn ($t) => $t ? $identitas->empatDigitAkhirTelepon($t) : null)
+                    ->filter()
+                    ->unique()
+                    ->values();
 
-                if (! $permohonan || $akhirTelepon === null || ! hash_equals($akhirTelepon, $telepon4)) {
+                $cocok = $permohonan && $kandidatTelepon->contains(fn (string $akhir) => hash_equals($akhir, $telepon4));
+
+                if (! $cocok) {
                     $pesanError = 'Permohonan tidak ditemukan atau 4 digit akhir nomor telepon tidak cocok.';
                 } else {
                     // Q-09 & Q-14: tanpa nama petugas internal dan hanya menampilkan 7 status publik.
+                    $namaPemohon = $permohonan->namaPemohonEfektif() ?? '';
+                    $namaMustahik = $permohonan->mustahik?->nama ?? '';
+
                     $hasil = [
                         'kode_tracking' => $permohonan->kode_tracking,
                         'nomor' => $permohonan->nomor,
                         'tanggal' => $permohonan->tanggal?->format('d/m/Y'),
-                        'pemohon_samaran' => $identitas->samarkanNamaPublik($permohonan->mustahik?->nama),
+                        'pemohon_sama_mustahik' => (bool) $permohonan->pemohon_sama_mustahik,
+                        'pemohon_samaran' => $identitas->samarkanNamaPublik($namaPemohon),
+                        'penerima_manfaat_samaran' => $identitas->samarkanNamaPublik($namaMustahik),
                         'program' => $permohonan->program?->nama ?? '-',
                         'status_publik' => $permohonan->status_publik,
                         'judul_status' => Permohonan::judulPublikUntuk($permohonan->status_publik),

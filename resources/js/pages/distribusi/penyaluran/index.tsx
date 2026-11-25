@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, Ban, CheckCircle2, Plus, Search, Wallet } from 'lucide-react';
+import { AlertTriangle, Ban, CheckCircle2, Pencil, Plus, Search, Wallet } from 'lucide-react';
 import * as React from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -23,8 +23,11 @@ interface PenyaluranRow {
     tanggal: string | null;
     status: 'draft' | 'disetujui' | 'dicairkan' | 'batal';
     mustahik: string | null;
+    mustahik_kode: string | null;
     program: string | null;
     sub_bidang: string;
+    asnaf: string | null;
+    sumber_dana: string;
     metode: string | null;
     peringatan_saldo: string | null;
     total: number;
@@ -75,13 +78,31 @@ export default function PenyaluranIndex({ penyaluran, filter, bisa_kelola, bisa_
         },
         {
             id: 'mustahik',
-            header: 'Mustahik & Program',
+            header: 'Mustahik',
             cell: (r) => (
                 <div>
-                    <p className="text-foreground">{r.mustahik ?? '-'}</p>
-                    <p className="text-muted-foreground text-xs">
-                        {r.program ?? '-'} · {r.ringkas_item}
-                    </p>
+                    <p className="text-foreground font-medium">{r.mustahik ?? '-'}</p>
+                    {r.mustahik_kode && <p className="text-muted-foreground text-xs">{r.mustahik_kode}</p>}
+                </div>
+            ),
+        },
+        {
+            id: 'program',
+            header: 'Program',
+            cell: (r) => (
+                <div>
+                    <p className="text-foreground">{r.program ?? '-'}</p>
+                    <p className="text-muted-foreground text-xs capitalize">{r.sub_bidang}</p>
+                </div>
+            ),
+        },
+        {
+            id: 'asnaf',
+            header: 'Asnaf & Sumber Dana',
+            cell: (r) => (
+                <div>
+                    <p className="text-foreground">{r.asnaf ?? 'Non-Zakat'}</p>
+                    <p className="text-muted-foreground text-xs">{r.sumber_dana || '-'}</p>
                 </div>
             ),
         },
@@ -118,6 +139,14 @@ export default function PenyaluranIndex({ penyaluran, filter, bisa_kelola, bisa_
             align: 'right',
             cell: (r) => (
                 <div className="flex flex-wrap justify-end gap-1.5">
+                    {r.status === 'draft' && bisa_kelola && (
+                        <Button asChild size="sm" variant="outline" className="h-8 gap-1">
+                            <Link href={route('distribusi.penyaluran.create', { draft_id: r.id })}>
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>Ubah Draft</span>
+                            </Link>
+                        </Button>
+                    )}
                     {r.status === 'draft' && bisa_setujui && (
                         <Button
                             type="button"

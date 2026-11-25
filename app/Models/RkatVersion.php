@@ -17,7 +17,7 @@ class RkatVersion extends Model
     }
 
     protected $fillable = [
-        'tahun', 'jenis', 'nomor_perubahan', 'status', 'sumber', 'nomor_surat', 'tanggal_surat',
+        'tahun', 'tahun_anggaran_id', 'jenis', 'nomor_perubahan', 'status', 'sumber', 'nomor_surat', 'tanggal_surat',
         'disahkan_pada', 'disahkan_oleh', 'dibuat_oleh', 'disalin_dari_id', 'arsip',
     ];
 
@@ -25,11 +25,17 @@ class RkatVersion extends Model
     {
         return [
             'tahun' => 'integer',
+            'tahun_anggaran_id' => 'integer',
             'nomor_perubahan' => 'integer',
             'tanggal_surat' => 'date',
             'disahkan_pada' => 'datetime',
             'arsip' => 'boolean',
         ];
+    }
+
+    public function tahunAnggaran(): BelongsTo
+    {
+        return $this->belongsTo(TahunAnggaran::class, 'tahun_anggaran_id');
     }
 
     public function nilai(): HasMany

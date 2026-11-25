@@ -313,3 +313,70 @@ it('PDP-T10 Q-06: draft dan final BA penyaluran dapat diubah serta dibatalkan un
     $baRevisi = app(BuatBeritaAcaraPenyaluran::class)->jalankan(['tanggal' => '2026-11-23']);
     expect($baRevisi->revisi_ke)->toBe(1);
 });
+
+it('PDP-T09 & PDP-T13: dasbor pendistribusian tanpa saldo kelompok dana, tabel penyaluran memuat asnaf & program, dan QR lacak terisi rapi', function () {
+    $kabagDist = User::factory()->create()->assignRole(['kabag_pendis_pendag', 'amil']);
+    $stafDist = User::factory()->create()->assignRole(['staf_pendistribusian', 'amil']);
+
+    $tunai = MetodeBayar::where('kode', 'TUNAI')->firstOrFail();
+    $zm = SumberDana::where('kode', 'ZM')->firstOrFail();
+    $fakir = Asnaf::where('kode', 'ilike', 'fakir')->firstOrFail();
+    $uang = BentukBantuan::where('kode', 'UANG')->firstOrFail();
+    $program = Program::where('sub_bidang', 'pendistribusian')->firstOrFail();
+
+    $this->actingAs($stafDist);
+    $mustahik = app(SimpanMustahik::class)->jalankan(['jenis' => 'perorangan', 'nama' => 'Pak Rahman', 'telepon' => '081200001234']);
+    app(SimpanPenyaluran::class)->jalankan([
+        'tanggal' => now()->toDateString(),
+        'mustahik_id' => $mustahik->id,
+        'program_id' => $program->id,
+        'metode_bayar_id' => $tunai->id,
+        'items' => [['sumber_dana_id' => $zm->id, 'asnaf_id' => $fakir->id, 'bentuk_bantuan_id' => $uang->id, 'jumlah' => 450_000]],
+    ]);
+
+    $permohonan = app(BuatPermohonan::class)->jalankan([
+        'mustahik_id' => $mustahik->id,
+        'pemohon_sama_mustahik' => false,
+        'pemohon_nama' => 'Ibu Aminah',
+        'pemohon_telepon' => '081377774321',
+        'pemohon_hubungan' => 'Keluarga',
+        'program_id' => $program->id,
+        'jenis_dana_id' => JenisDana::where('kode', 'ZAKAT')->firstOrFail()->id,
+        'asnaf_id' => $fakir->id,
+        'nominal_diajukan' => 450_000,
+    ]);
+
+    $this->actingAs($kabagDist)
+        ->get(route('distribusi.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('distribusi/dasbor')
+            ->missing('saldo_kelompok')
+            ->has('grafik_program')
+            ->has('grafik_asnaf'));
+
+    $this->get(route('distribusi.penyaluran.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('distribusi/penyaluran/index')
+            ->where('penyaluran.data.0.program', $program->nama)
+            ->where('penyaluran.data.0.asnaf', $fakir->nama));
+
+    // Buka portal lacak langsung dari QR (?kode_tracking=...) tanpa memunculkan pesan error lebih dulu.
+    auth()->logout();
+    $this->get(route('publik.lacak-permohonan', ['kode_tracking' => $permohonan->kode_tracking]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('publik/lacak-permohonan')
+            ->where('sudah_dicari', false)
+            ->where('pesan_error', null)
+            ->where('kode_tracking', $permohonan->kode_tracking));
+
+    // Lacak menggunakan 4 digit akhir telepon pemohon terpisah.
+    $this->get(route('publik.lacak-permohonan', ['kode_tracking' => $permohonan->kode_tracking, 'telepon_4' => '4321', 'cari' => 1]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('publik/lacak-permohonan')
+            ->where('hasil.pemohon_sama_mustahik', false)
+            ->where('hasil.kode_tracking', $permohonan->kode_tracking));
+});

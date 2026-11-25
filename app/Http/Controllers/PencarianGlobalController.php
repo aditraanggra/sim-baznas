@@ -8,13 +8,16 @@ use App\Models\Penerimaan;
 use App\Models\Penyaluran;
 use App\Models\Permohonan;
 use App\Models\PosAnggaran;
+use App\Models\SuratKeluar;
+use App\Models\SuratMasuk;
 use App\Models\Upz;
+use App\Services\Administrasi\AksesPersuratanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PencarianGlobalController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, AksesPersuratanService $aksesPersuratan): JsonResponse
     {
         $user = $request->user();
         $q = trim($request->string('q')->toString());
@@ -118,6 +121,47 @@ class PencarianGlobalController extends Controller
                         'url' => route('umum.upz.show', $u->id),
                     ];
                 });
+
+            if (! $user->adalahUpzEksternal()) {
+                $suratMasukQuery = SuratMasuk::query()
+                    ->where(fn ($sub) => $sub
+                        ->where('nomor_agenda', 'ilike', "%{$q}%")
+                        ->orWhere('nomor_surat', 'ilike', "%{$q}%")
+                        ->orWhere('pengirim', 'ilike', "%{$q}%")
+                        ->orWhere('perihal', 'ilike', "%{$q}%"));
+
+                $aksesPersuratan->terapkanCakupanSuratMasuk($suratMasukQuery, $user)
+                    ->orderByDesc('tanggal_terima')
+                    ->limit(5)
+                    ->get(['id', 'nomor_agenda', 'pengirim', 'perihal'])
+                    ->each(function (SuratMasuk $m) use (&$hasil): void {
+                        $hasil[] = [
+                            'kategori' => 'Surat Masuk',
+                            'judul' => "{$m->nomor_agenda} — {$m->perihal}",
+                            'subjudul' => $m->pengirim,
+                            'url' => route('umum.surat.masuk.show', $m->id),
+                        ];
+                    });
+
+                $suratKeluarQuery = SuratKeluar::query()
+                    ->where(fn ($sub) => $sub
+                        ->where('nomor', 'ilike', "%{$q}%")
+                        ->orWhere('tujuan', 'ilike', "%{$q}%")
+                        ->orWhere('perihal', 'ilike', "%{$q}%"));
+
+                $aksesPersuratan->terapkanCakupanSuratKeluar($suratKeluarQuery, $user)
+                    ->orderByDesc('tanggal')
+                    ->limit(5)
+                    ->get(['id', 'nomor', 'tujuan', 'perihal'])
+                    ->each(function (SuratKeluar $k) use (&$hasil): void {
+                        $hasil[] = [
+                            'kategori' => 'Surat Keluar',
+                            'judul' => ($k->nomor ?? '(Draft)')." — {$k->perihal}",
+                            'subjudul' => $k->tujuan,
+                            'url' => route('umum.surat.keluar.show', $k->id),
+                        ];
+                    });
+            }
         }
 
         if ($user->bolehAksiBidang('pkp', 'view')) {

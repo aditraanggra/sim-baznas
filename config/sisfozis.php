@@ -162,8 +162,9 @@ return [
     'kop_surat' => [
         'lembaga' => 'BADAN AMIL ZAKAT NASIONAL (BAZNAS)',
         'kabupaten' => 'KABUPATEN CIANJUR',
-        'alamat' => 'Jl. Raya Bandung KM. 03 Sadewata, Kec. Karangtengah, Kabupaten Cianjur, Jawa Barat 43281',
+        'alamat' => 'Jl. Raya Bandung Sadewata No. 108B Cianjur',
         'telepon' => '(0263) 264866',
+        'whatsapp' => '087771345995',
         'email' => 'baznaskab.cianjur@baznas.go.id',
         'website' => 'https://baznaskabcianjur.com',
         'kota' => 'Cianjur',

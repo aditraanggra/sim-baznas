@@ -54,12 +54,12 @@
             padding: 0 0 6pt 0;
         }
         .kop-logo {
-            width: 64pt;
+            width: 70pt;
             text-align: center;
         }
         .kop-logo img {
-            width: 52pt;
-            height: 52pt;
+            width: 58pt;
+            height: auto;
         }
         .kop-teks {
             text-align: center;

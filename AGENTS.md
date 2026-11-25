@@ -17,22 +17,22 @@ Sumber kebenaran:
 - Library: `spatie/laravel-permission`, `maatwebsite/excel`, `barryvdh/laravel-dompdf`.
 - Antrean: driver `database`. Zona waktu `Asia/Jakarta`, locale `id`, angka format id-ID.
 
-## Lingkungan & Perintah (`E:\SIM BAZNAS\sim-baznas`)
+## Lingkungan & Perintah (`D:\IT\sim-baznas`)
 
 - **Docker:** `docker compose up -d` menjalankan `pkp-app` (port 8000, image `sim-baznas-app:latest`, PHP 8.4.15 + ekstensi lengkap) dan `pkp-postgres` (PostgreSQL 17, port host 5433, DB `pkp` dan `pkp_test`).
-- **PHP & Composer di Windows:** PHP Herd Lite di host (`C:\Users\ARSYAIRA\.config\herd-lite\bin\php.exe`) masih **PHP 8.1.31 tanpa `ext-gd`**, sedangkan `composer.lock` mensyaratkan PHP >= 8.4 dan `ext-gd`. Oleh karena itu perintah PHP 8.4 (`composer`, `pest`, `pint`, `artisan` migrasi uji) dijalankan via Docker menggunakan image `sim-baznas-app:latest` dengan mount workspace `E:/SIM BAZNAS/sim-baznas:/var/www/html` pada network `sim-baznas_pkp-network` (wajib sertakan `-e APP_ENV=testing` saat menjalankan Pest karena `Dockerfile` menyetel `ENV APP_ENV=production`). Untuk runtime container aktif gunakan `docker exec pkp-app php artisan ...`.
+- **PHP & Composer di Windows:** PHP Herd Lite di host (`C:\Users\ARSYAIRA\.config\herd-lite\bin\php.exe`) masih **PHP 8.1.31 tanpa `ext-gd`**, sedangkan `composer.lock` mensyaratkan PHP >= 8.4 dan `ext-gd`. Oleh karena itu perintah PHP 8.4 (`composer`, `pest`, `pint`, `artisan` migrasi uji) dijalankan via Docker menggunakan image `sim-baznas-app:latest` dengan mount workspace `D:/IT/sim-baznas:/var/www/html` pada network `sim-baznas_pkp-network` (wajib sertakan `-e APP_ENV=testing` saat menjalankan Pest karena `Dockerfile` menyetel `ENV APP_ENV=production`). Untuk runtime container aktif gunakan `docker exec pkp-app php artisan ...`.
 - **Node/npm di Windows:** `node node_modules/eslint/bin/eslint.js resources/js` dan `node node_modules/typescript/bin/tsc --noEmit` berjalan di Node host; bila `node_modules` berisi binding native Linux sehingga `vite build` di Windows gagal, bangun aset via container `node:22-alpine` atau salin hasil build dari `pkp-app` (`docker cp pkp-app:/var/www/html/public/build ./public/`).
 
 | Tujuan | Perintah |
 |---|---|
 | Nyalakan layanan Docker | `docker compose up -d` (atau `docker start pkp-postgres pkp-app`) |
-| Pasang dependensi PHP | `docker run --rm -e COMPOSER_MAX_PARALLEL_HTTP=4 -v "E:/SIM BAZNAS/sim-baznas:/var/www/html" -w /var/www/html sim-baznas-app:latest composer install --no-interaction` |
+| Pasang dependensi PHP | `docker run --rm -e COMPOSER_MAX_PARALLEL_HTTP=4 -v "D:/IT/sim-baznas:/var/www/html" -w /var/www/html sim-baznas-app:latest composer install --no-interaction` |
 | Migrasi (container app) | `docker exec pkp-app php artisan migrate` |
-| Uji (Pest) | `docker run --rm --network sim-baznas_pkp-network -v "E:/SIM BAZNAS/sim-baznas:/var/www/html" -w /var/www/html -e APP_ENV=testing -e DB_HOST=pkp-postgres -e DB_PORT=5432 sim-baznas-app:latest php vendor/bin/pest` |
-| Lint PHP (Pint) | `docker run --rm -v "E:/SIM BAZNAS/sim-baznas:/var/www/html" -w /var/www/html sim-baznas-app:latest php vendor/bin/pint --test` (perbaiki: tanpa `--test`) |
+| Uji (Pest) | `docker run --rm --network sim-baznas_pkp-network -v "D:/IT/sim-baznas:/var/www/html" -w /var/www/html -e APP_ENV=testing -e DB_HOST=pkp-postgres -e DB_PORT=5432 sim-baznas-app:latest php vendor/bin/pest` |
+| Lint PHP (Pint) | `docker run --rm -v "D:/IT/sim-baznas:/var/www/html" -w /var/www/html sim-baznas-app:latest php vendor/bin/pint --test` (perbaiki: tanpa `--test`) |
 | Lint JS & TS | `node node_modules/eslint/bin/eslint.js resources/js` dan `node node_modules/typescript/bin/tsc --noEmit` |
-| Build aset frontend | `docker run --rm -v "E:/SIM BAZNAS/sim-baznas:/var/www/html" -w /var/www/html node:22-alpine npm run build` (atau `docker cp pkp-app:/var/www/html/public/build ./public/`) |
-| Rollback uji (`pkp_test`) | `docker run --rm --network sim-baznas_pkp-network -v "E:/SIM BAZNAS/sim-baznas:/var/www/html" -w /var/www/html -e APP_ENV=testing -e DB_HOST=pkp-postgres -e DB_PORT=5432 -e DB_DATABASE=pkp_test sim-baznas-app:latest sh -c "php artisan migrate:fresh && php artisan migrate:rollback"` |
+| Build aset frontend | `docker run --rm -v "D:/IT/sim-baznas:/var/www/html" -w /var/www/html node:22-alpine npm run build` (atau `docker cp pkp-app:/var/www/html/public/build ./public/`) |
+| Rollback uji (`pkp_test`) | `docker run --rm --network sim-baznas_pkp-network -v "D:/IT/sim-baznas:/var/www/html" -w /var/www/html -e APP_ENV=testing -e DB_HOST=pkp-postgres -e DB_PORT=5432 -e DB_DATABASE=pkp_test sim-baznas-app:latest sh -c "php artisan migrate:fresh && php artisan migrate:rollback"` |
 
 ## Keputusan Arsitektur Terkunci (K1-K15)
 
@@ -76,3 +76,11 @@ Sumber kebenaran:
 - Fixture uji RKAT: `docs/fixtures/rkat-2026.json` dan `docs/fixtures/rkat-2022-2031.xlsx`.
 - Jangan commit `.env`. Tanpa komentar yang menjelaskan hal jelas.
 - Pembuatan dan pengubahan UI front end (`resources/js/pages/`, `resources/js/components/`, `resources/js/layouts/`) wajib menggunakan skill `/antislop` dengan `docs/DESIGN.md` sebagai arah desain.
+
+## Eksplorasi Codebase (CodeGraph)
+
+Codebase ini telah diindeks dengan `@colbymchenry/codegraph` (indeks lokal di `.codegraph/`). Saat memahami struktur kode, melacak alur pemanggilan simbol, atau menganalisis dampak perubahan:
+
+- **Prioritaskan tool MCP `codegraph_explore`** (ketika MCP server `codegraph` aktif) sebelum melakukan pemindaian manual dengan `grep`/`rg`, `glob`, atau membaca banyak file secara berurutan. Jika server MCP melaporkan tidak ada proyek default yang termuat, sertakan parameter `projectPath: "D:/IT/sim-baznas"`.
+- **Alternatif CLI** (bila tool MCP belum aktif di sesi berjalan atau untuk pembaruan indeks manual): jalankan via `cmd /c "codegraph explore \"<kata kunci atau simbol>\""`, `cmd /c "codegraph status"`, atau `cmd /c "codegraph sync"` (atau `cmd /c "codegraph index"` untuk indeks ulang penuh).
+- Jangan mengubah atau meng-commit direktori `.codegraph/` (sudah diabaikan di `.gitignore`).

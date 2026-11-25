@@ -224,10 +224,14 @@ class UpzController extends Controller
                 'total_setoran' => (int) $r->total_setoran,
             ]);
 
+        $konteksModul = $request->routeIs('pkp.*') ? 'pkp' : 'umum';
+
         return Inertia::render('umum/upz/laporan-setoran', [
             'tahun' => $tahun,
             'baris' => $baris,
             'total_semua' => $baris->sum('total_setoran'),
+            'konteks_modul' => $konteksModul,
+            'bisa_lihat_upz' => $user->hasAnyRole(['admin', 'ketua', 'kabag_sau', 'admin_arsip']),
         ]);
     }
 }

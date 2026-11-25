@@ -36,6 +36,11 @@ class BuatPermohonan extends Action
         $tervalidasi = validator($data, [
             'tanggal' => ['nullable', 'date'],
             'mustahik_id' => ['required', 'integer', 'exists:mustahik,id'],
+            'pemohon_sama_mustahik' => ['nullable', 'boolean'],
+            'pemohon_nama' => ['nullable', 'string', 'max:160'],
+            'pemohon_telepon' => ['nullable', 'string', 'max:32'],
+            'pemohon_hubungan' => ['nullable', 'string', 'max:64'],
+            'pemohon_alamat' => ['nullable', 'string', 'max:500'],
             'program_id' => ['required', 'integer', 'exists:program,id'],
             'jenis_dana_id' => ['nullable', 'integer', 'exists:jenis_dana,id'],
             'asnaf_id' => ['nullable', 'integer', 'exists:asnaf,id'],
@@ -52,6 +57,28 @@ class BuatPermohonan extends Action
             throw ValidationException::withMessages([
                 'mustahik_id' => 'Mustahik nonaktif tidak dapat mengajukan permohonan baru.',
             ]);
+        }
+
+        $sama = array_key_exists('pemohon_sama_mustahik', $tervalidasi)
+            ? (bool) $tervalidasi['pemohon_sama_mustahik']
+            : true;
+
+        $pemohonNama = trim((string) ($tervalidasi['pemohon_nama'] ?? ''));
+        $pemohonTelepon = trim((string) ($tervalidasi['pemohon_telepon'] ?? ''));
+        $pemohonHubungan = trim((string) ($tervalidasi['pemohon_hubungan'] ?? ''));
+        $pemohonAlamat = trim((string) ($tervalidasi['pemohon_alamat'] ?? ''));
+
+        if (! $sama) {
+            $galatPemohon = [];
+            if ($pemohonNama === '') {
+                $galatPemohon['pemohon_nama'] = 'Nama pemohon wajib diisi apabila berbeda dengan penerima manfaat (mustahik).';
+            }
+            if ($pemohonTelepon === '') {
+                $galatPemohon['pemohon_telepon'] = 'Nomor telepon pemohon wajib diisi untuk keperluan konfirmasi dan pelacakan publik.';
+            }
+            if ($galatPemohon !== []) {
+                throw ValidationException::withMessages($galatPemohon);
+            }
         }
 
         if (! empty($tervalidasi['jenis_dana_id'])) {
@@ -71,7 +98,7 @@ class BuatPermohonan extends Action
         $program = Program::findOrFail($tervalidasi['program_id']);
         $tanggalObj = ! empty($tervalidasi['tanggal']) ? Carbon::parse($tervalidasi['tanggal']) : Carbon::today();
 
-        return DB::transaction(function () use ($tervalidasi, $program, $tanggalObj, $mustahik): Permohonan {
+        return DB::transaction(function () use ($tervalidasi, $program, $tanggalObj, $mustahik, $sama, $pemohonNama, $pemohonTelepon, $pemohonHubungan, $pemohonAlamat): Permohonan {
             do {
                 $kodeTracking = 'TRK-'.$tanggalObj->format('ymd').'-'.strtoupper(Str::random(5));
             } while (Permohonan::where('kode_tracking', $kodeTracking)->exists());
@@ -81,6 +108,11 @@ class BuatPermohonan extends Action
                 'kode_tracking' => $kodeTracking,
                 'tanggal' => $tanggalObj->toDateString(),
                 'mustahik_id' => $mustahik->id,
+                'pemohon_sama_mustahik' => $sama,
+                'pemohon_nama' => $sama ? $mustahik->nama : $pemohonNama,
+                'pemohon_telepon' => $sama ? $mustahik->telepon : $pemohonTelepon,
+                'pemohon_hubungan' => $sama ? 'Diri Sendiri' : ($pemohonHubungan !== '' ? $pemohonHubungan : 'Perwakilan'),
+                'pemohon_alamat' => $sama ? $mustahik->alamat : ($pemohonAlamat !== '' ? $pemohonAlamat : null),
                 'program_id' => $program->id,
                 'sub_bidang' => $program->sub_bidang ?: 'pendistribusian',
                 'jenis_dana_id' => $tervalidasi['jenis_dana_id'] ?? null,
@@ -142,7 +174,7 @@ class BuatPermohonan extends Action
                 Permohonan::class,
                 $permohonan->id,
                 null,
-                $permohonan->only(['nomor', 'kode_tracking', 'mustahik_id', 'program_id', 'nominal_diajukan', 'status_kode']),
+                $permohonan->only(['nomor', 'kode_tracking', 'mustahik_id', 'pemohon_sama_mustahik', 'pemohon_nama', 'program_id', 'nominal_diajukan', 'status_kode']),
             );
 
             $this->notifikasi->kirimKePeran(

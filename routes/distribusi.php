@@ -45,6 +45,9 @@ Route::middleware(['auth', 'bidang:distribusi,view'])
         Route::get('permohonan/{permohonan}/lembar-disposisi', [PermohonanController::class, 'lembarDisposisiPdf'])
             ->middleware('bidang:distribusi,print')
             ->name('permohonan.lembar-disposisi');
+        Route::get('permohonan/{permohonan}/tanda-terima', [PermohonanController::class, 'tandaTerimaPdf'])
+            ->middleware('bidang:distribusi,print')
+            ->name('permohonan.tanda-terima');
 
         Route::get('penyaluran', [PenyaluranController::class, 'index'])->name('penyaluran.index');
         Route::get('penyaluran/buat', [PenyaluranController::class, 'create'])

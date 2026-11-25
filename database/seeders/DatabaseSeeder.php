@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             JenisUpzSeeder::class,
             PosAnggaranSeeder::class,
             RkatSeeder::class,
+            PerencanaanJembatanSeeder::class,
+            AdministrasiSeeder::class,
         ]);
     }
 }

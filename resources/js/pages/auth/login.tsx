@@ -1,4 +1,3 @@
-import AppLogoIcon from '@/components/app-logo-icon';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -45,8 +44,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
             <div className="bg-brand-deep border-gold relative overflow-hidden border-b-4 text-white">
                 <div className="mx-auto flex max-w-4xl items-center justify-center gap-3 px-6 py-7 text-center">
-                    <div className="bg-brand flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 text-white">
-                        <AppLogoIcon className="h-6 w-6 fill-current" />
+                    <div className="flex shrink-0 items-center justify-center rounded-xl border border-white/25 bg-white px-2.5 py-1.5 shadow-sm">
+                        <img src="/images/logo-baznas.png" alt="Logo BAZNAS" className="h-9 w-auto object-contain" />
                     </div>
                     <div className="text-left">
                         <p className="font-display text-lg leading-tight font-semibold">SISFOZIS BAZNAS</p>

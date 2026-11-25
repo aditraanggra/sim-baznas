@@ -72,7 +72,7 @@ Kode usulan; peran `perencanaan`, `keuangan`, dan `admin` yang sudah ada diperta
 | Administrasi (surat), Umum (aset) | Tidak ada | Belum |
 | Keuangan, Arsip, SDM | Tidak ada (`pkp/keuangan` placeholder) | Belum (Fase 2-3) |
 
-Catatan lingkungan: `AGENTS.md` merujuk `/mnt/d/IT/sim-baznas` dan WSL, sedangkan repo kini di `E:\SIM BAZNAS\sim-baznas` dengan Docker. Perintah perlu diselaraskan (F0-01).
+Catatan lingkungan: `AGENTS.md` telah diselaraskan ke workspace `D:\IT\sim-baznas` dengan Docker.
 
 ## 3. Kompleksitas dan rekomendasi model
 
@@ -189,22 +189,22 @@ Prioritas: **P-A** jalur kritis, **P-B** wajib sebelum go-live fase, **P-C** bol
 | ID | Tugas | Kmplx | Model | Prio | Bergantung |
 |---|---|---|---|---|---|
 | PRC-T01 | Review dan merge PK1 (RKAT) yang menunggu review; selesaikan temuan 25-34 — **Selesai (22 Nov)** | M | Claude Sonnet | P-A | - |
-| PRC-T02 | Rancang jembatan pos L2-L7 ke `bidang`, `jenis_dana`, `sumber_dana`, `program` (= tabel kegiatan PRC-06); rencana tertulis dulu | XL | Claude Opus | P-A | F0-10, Q-12 |
-| PRC-T03 | Tabel `tahun_anggaran` (draft/berjalan/tutup) dikaitkan ke `rkat_versions.tahun` | M | Claude Sonnet | P-B | PRC-T02 |
-| PRC-T04 | View `v_realisasi_rkat` dari penerimaan dan penyaluran + halaman RKAT vs realisasi; rollup diuji terhadap penjumlahan sumber | L | Claude Opus | P-A | PRC-T02, PGM-T03, PDP-T08 |
+| PRC-T02 | Rancang jembatan pos L2-L7 ke `bidang`, `jenis_dana`, `sumber_dana`, `program` (= tabel kegiatan PRC-06); rencana tertulis dulu — **Selesai (24 Nov)** | XL | Claude Opus | P-A | F0-10, Q-12 |
+| PRC-T03 | Tabel `tahun_anggaran` (draft/berjalan/tutup) dikaitkan ke `rkat_versions.tahun` — **Selesai (24 Nov)** | M | Claude Sonnet | P-B | PRC-T02 |
+| PRC-T04 | View `v_realisasi_rkat` dari penerimaan dan penyaluran + halaman RKAT vs realisasi; rollup diuji terhadap penjumlahan sumber — **Selesai (24 Nov)** | L | Claude Opus | P-A | PRC-T02, PGM-T03, PDP-T08 |
 | PRC-T05 | Master `indikator` + RENSTRA (`renstra`, `renstra_sasaran`, `renstra_target`) | M | Claude Sonnet | P-B | - |
 | PRC-T06 | RENJA (`renja`, `renja_kegiatan`, `renja_target`) per tahun dan bidang | M | Claude Sonnet | P-B | PRC-T05 |
 | PRC-T07 | Laporan Kinerja tahunan dan 5 tahunan: capaian vs target, realisasi anggaran, narasi, PDF | L | Claude Opus | P-B | PRC-T04, PRC-T06, Q-17 |
-| PRC-T08 | Putuskan nasib placeholder PK2-PK5 (realisasi manual, kinerja, keuangan, dashboard) | S | Gemini Flash | P-A | Q-12 |
+| PRC-T08 | Putuskan nasib placeholder PK2-PK5 (realisasi manual, kinerja, keuangan, dashboard) — **Selesai (24 Nov)** | S | Gemini Flash | P-A | Q-12 |
 
 ### 6.2 Administrasi / Surat (ADM-01..03)
 
 | ID | Tugas | Kmplx | Model | Prio | Bergantung |
 |---|---|---|---|---|---|
-| ADM-T01 | Master `jenis_surat` (format nomor), `template_surat` | S | Gemini Flash | P-A | Q-02 |
-| ADM-T02 | Surat masuk: nomor agenda, unggah, status log, disposisi Admin Arsip → Ketua → multi Waka I-IV → instruksi bawahan (K9), notifikasi | L | Claude Opus | P-A | F0-23, F0-24 |
-| ADM-T03 | Surat keluar: render template berplaceholder, nomor otomatis, persetujuan, PDF kop serif | L | Claude Opus | P-A | ADM-T01, F0-13, F0-22 |
-| ADM-T04 | Arsip dan pencarian surat (full-text Postgres) | M | Claude Sonnet | P-B | ADM-T02 |
+| ADM-T01 | Master `jenis_surat` (format nomor, pisah urutan), `template_surat` (editor placeholder `{{variabel}}`) — **Selesai (24 Nov)** | S | Gemini Flash | P-A | Q-02 |
+| ADM-T02 | Surat masuk: nomor agenda, unggah, status log, disposisi Admin Arsip → Ketua → multi Waka I-IV → instruksi bawahan (K9), selesai otomatis per cabang, PDF Lembar Disposisi, notifikasi — **Selesai (24 Nov)** | L | Claude Opus | P-A | F0-23, F0-24 |
+| ADM-T03 | Surat keluar: render template berplaceholder, nomor otomatis saat disetujui (global & pisah urutan SK), Maker-Checker, PDF kop serif + QR verifikasi publik & cetak ulang — **Selesai (24 Nov)** | L | Claude Opus | P-A | ADM-T01, F0-13, F0-22 |
+| ADM-T04 | Arsip dan pencarian surat (full-text Postgres), ekspor Buku Agenda Excel/PDF, Ctrl+K, & Dasbor Bidang Umum — **Selesai (24 Nov)** | M | Claude Sonnet | P-B | ADM-T02 |
 
 ### 6.3 Umum / Aset (UMM-01..03)
 
@@ -270,13 +270,13 @@ Asumsi konservatif dipakai sampai dijawab; jangan ditebak (AGENTS.md aturan 8).
 | Q-09 | Penyedia captcha (server tanpa akses luar?) | PDP-T12 | **DIKUNCI KONSERVATIF (22 Nov):** Rate limit `10/menit` + `kode_tracking` + 4 digit akhir telepon; captcha menyusul pasca-MVP |
 | Q-10 | Metode 2FA (aplikasi TOTP, email OTP) | F0-07 | **DIKUNCI KONSERVATIF (22 Nov):** RFC 6238 TOTP wajib untuk `admin` dan `keuangan` |
 | Q-11 | NIK: enkripsi saat disimpan (UU PDP) bertentangan dengan unik/cari. Setuju kolom hash untuk cari + enkripsi nilai? | PGM-T01, PDP-T01 | **DIKUNCI KONSERVATIF (22 Nov):** Simpan terenkripsi (`nik_encrypted`) + `nik_hash` HMAC-SHA256 unik + `nik_masked` |
-| Q-12 | Realisasi historis 2022-2025 (sebelum go-live) masih perlu diinput manual/impor (rencana PK2 lama)? | PRC-T02, PRC-T08 | Ya, lewat impor; data transaksi sejak go-live |
+| ~~Q-12~~ | Realisasi historis 2022-2025 (sebelum go-live) masih perlu diinput manual/impor (rencana PK2 lama)? | PRC-T02, PRC-T08 | **DIKUNCI (24 Nov 2026):** Ya, lewat input/impor `realisasi_manual`; data transaksi sejak go-live otomatis |
 | ~~Q-13~~ | Rincian sumber dana per jenis dana, daftar asnaf, dan program per bidang | F0-10 | **TERJAWAB 22 Nov** → `docs/Jenis Dana_Sumber Dana_Asnaf_Program.md` (K14) |
 | Q-14 | Pemetaan 7 langkah rute K8 ke 7 status publik (Diajukan, Disposisi, Verifikasi, Acc Pimpinan, Disetujui, Dicairkan, Ditolak) | PDP-T04 | **DIKUNCI KONSERVATIF (22 Nov):** 8 status internal → 7 status publik (`minta_keuangan` → `disetujui`) |
 | Q-15 | Aset kop surat: logo resmi, alamat, kontak, penandatangan per dokumen | F0-22 | Placeholder sampai dikirim |
 | Q-16 | Bantuan barang: dicatat dengan nilai rupiah taksiran? Masuk saldo? | PDP-T08 | **DIKUNCI KONSERVATIF (22 Nov):** Wajib uraian barang & taksiran rupiah `BIGINT > 0`, mengurangi saldo Kelompok Dana |
-| Q-17 | Capaian indikator non-keuangan (jumlah mustahik, dll) dihitung otomatis atau diinput? | PRC-T07 | Otomatis bila ada data transaksi, selain itu input manual |
-| Q-18 | Umur ekonomis dan nilai residu per kategori aset; penyusutan mulai bulan perolehan atau bulan berikutnya | UMM-T03 | Mulai bulan berikutnya, residu 0% |
+| ~~Q-17~~ | Capaian indikator non-keuangan (jumlah mustahik, dll) dihitung otomatis atau diinput? | PRC-T07 | **DIKUNCI (24 Nov 2026):** Otomatis bila terpetakan ke data transaksi, selain itu input manual |
+| ~~Q-18~~ | Umur ekonomis dan nilai residu per kategori aset; penyusutan mulai bulan perolehan atau bulan berikutnya | UMM-T03 | **DIKUNCI (24 Nov 2026):** Mulai bulan berikutnya, nilai residu default 0% (dapat disesuaikan per kategori) |
 | ~~Q-19~~ | Peran `amil`: akses apa saja? Apakah semua pengguna otomatis `amil`? | F0-03 | **TERJAWAB 22 Nov** → K7 (semua user internal otomatis punya role `amil` untuk profil, SK amil, tugas pribadi) |
 | ~~Q-20~~ | Peran `upz`: siapa dan aksesnya apa? | F0-03, UPZ-T01 | **TERJAWAB 22 Nov** → K12 (pengguna eksternal login di luar kantor untuk pantau setoran & SK UPZ sendiri) |
 | ~~Q-21~~ | Peran lama `pimpinan`, pemecahan peran, dan hak lihat Kabag lintas bidang | F0-03, PRC-T01 | **TERJAWAB 22 Nov** → K7 (`pimpinan` dipecah jadi `ketua` & `waka_1..4`; Kabag view dashboard bidang lain) |

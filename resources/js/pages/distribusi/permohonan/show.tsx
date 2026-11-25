@@ -4,11 +4,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/sonner';
 import AppLayout from '@/layouts/app-layout';
 import { formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Ban, CheckCircle2, FileDown, HandHeart, Printer, Send } from 'lucide-react';
+import { Ban, CheckCircle2, Copy, ExternalLink, FileDown, HandHeart, Printer, QrCode, Send } from 'lucide-react';
 import * as React from 'react';
 
 interface Props {
@@ -20,7 +21,13 @@ interface Props {
         mustahik_id: number;
         mustahik: string | null;
         mustahik_kode: string | null;
+        mustahik_telepon: string | null;
         mustahik_wilayah: string;
+        pemohon_sama_mustahik: boolean;
+        pemohon_nama: string | null;
+        pemohon_telepon: string | null;
+        pemohon_hubungan: string | null;
+        pemohon_alamat: string | null;
         program: string | null;
         sub_bidang: string;
         jenis_dana: string | null;
@@ -176,6 +183,12 @@ export default function PermohonanShow({
                     actions={
                         <>
                             <Button asChild variant="outline" className="h-9 gap-1.5">
+                                <a href={route('distribusi.permohonan.tanda-terima', permohonan.id)} target="_blank" rel="noreferrer">
+                                    <QrCode className="h-4 w-4" aria-hidden="true" />
+                                    <span>Bukti Kode Lacak</span>
+                                </a>
+                            </Button>
+                            <Button asChild variant="outline" className="h-9 gap-1.5">
                                 <a href={route('distribusi.permohonan.lembar-disposisi', permohonan.id)} target="_blank" rel="noreferrer">
                                     <Printer className="h-4 w-4" aria-hidden="true" />
                                     <span>Lembar Disposisi</span>
@@ -192,6 +205,54 @@ export default function PermohonanShow({
                         </>
                     }
                 />
+
+                <div className="bg-card border-border flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4">
+                    <div className="space-y-0.5">
+                        <p className="text-muted-foreground text-xs font-medium">Bukti Tanda Terima &amp; Kode Lacak Publik</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-foreground font-mono text-lg font-semibold tabular-nums">{permohonan.kode_tracking}</span>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1 px-2.5 text-xs"
+                                onClick={() => {
+                                    void navigator.clipboard?.writeText(permohonan.kode_tracking);
+                                    toast.success('Kode lacak publik berhasil disalin.');
+                                }}
+                            >
+                                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>Salin Kode</span>
+                            </Button>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                            Verifikasi memakai 4 digit terakhir telepon{' '}
+                            {permohonan.pemohon_sama_mustahik ? 'mustahik' : 'pemohon'}:{' '}
+                            <span className="text-foreground font-medium tabular-nums">
+                                {permohonan.pemohon_telepon ?? permohonan.mustahik_telepon ?? '-'}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button asChild variant="outline" size="sm" className="h-9 gap-1.5">
+                            <a
+                                href={route('publik.lacak-permohonan', { kode_tracking: permohonan.kode_tracking })}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>Buka Portal Lacak</span>
+                            </a>
+                        </Button>
+                        <Button asChild size="sm" className="h-9 gap-1.5">
+                            <a href={route('distribusi.permohonan.tanda-terima', permohonan.id)} target="_blank" rel="noreferrer">
+                                <Printer className="h-3.5 w-3.5" aria-hidden="true" />
+                                <span>Cetak Bukti Lacak (PDF)</span>
+                            </a>
+                        </Button>
+                    </div>
+                </div>
 
                 <div className="bg-card border-border rounded-2xl border p-4">
                     <p className="text-muted-foreground mb-3 text-xs font-medium">Progres Disposisi 7 Langkah (K8)</p>
@@ -231,13 +292,35 @@ export default function PermohonanShow({
 
                         <dl className="grid gap-3 text-sm sm:grid-cols-2">
                             <div>
-                                <dt className="text-muted-foreground text-xs">Mustahik</dt>
+                                <dt className="text-muted-foreground text-xs">Penerima Manfaat (Mustahik)</dt>
                                 <dd className="text-foreground mt-0.5 font-medium">
                                     <Link href={route('distribusi.mustahik.show', permohonan.mustahik_id)} className="text-primary hover:underline">
                                         {permohonan.mustahik} ({permohonan.mustahik_kode})
                                     </Link>
                                 </dd>
-                                <dd className="text-muted-foreground text-xs">{permohonan.mustahik_wilayah}</dd>
+                                <dd className="text-muted-foreground text-xs">
+                                    {permohonan.mustahik_wilayah || '-'}
+                                    {permohonan.mustahik_telepon ? ` · Telp: ${permohonan.mustahik_telepon}` : ''}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-muted-foreground text-xs">Data Pemohon</dt>
+                                {permohonan.pemohon_sama_mustahik ? (
+                                    <>
+                                        <dd className="text-foreground mt-0.5 font-medium">{permohonan.mustahik}</dd>
+                                        <dd className="text-muted-foreground text-xs">Sama dengan Penerima Manfaat (Diri Sendiri)</dd>
+                                    </>
+                                ) : (
+                                    <>
+                                        <dd className="text-foreground mt-0.5 font-medium">
+                                            {permohonan.pemohon_nama ?? '-'} ({permohonan.pemohon_hubungan ?? 'Perwakilan'})
+                                        </dd>
+                                        <dd className="text-muted-foreground text-xs">
+                                            Telp: {permohonan.pemohon_telepon ?? '-'}
+                                            {permohonan.pemohon_alamat ? ` · ${permohonan.pemohon_alamat}` : ''}
+                                        </dd>
+                                    </>
+                                )}
                             </div>
                             <div>
                                 <dt className="text-muted-foreground text-xs">Program & Dana</dt>

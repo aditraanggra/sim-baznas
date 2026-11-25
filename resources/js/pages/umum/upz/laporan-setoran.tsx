@@ -17,11 +17,33 @@ interface Baris {
     total_setoran: number;
 }
 
-export default function LaporanSetoranUpz({ tahun, baris, total_semua }: { tahun: number; baris: Baris[]; total_semua: number }) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'UPZ', href: '/umum/upz' },
-        { title: 'Laporan Setoran UPZ', href: '/umum/upz/laporan-setoran' },
-    ];
+interface Props {
+    tahun: number;
+    baris: Baris[];
+    total_semua: number;
+    konteks_modul?: 'pkp' | 'umum';
+    bisa_lihat_upz?: boolean;
+}
+
+export default function LaporanSetoranUpz({
+    tahun,
+    baris = [],
+    total_semua = 0,
+    konteks_modul = 'umum',
+    bisa_lihat_upz = false,
+}: Props) {
+    const diPkp = konteks_modul === 'pkp';
+    const routeLaporan = diPkp ? 'pkp.laporan-setoran-upz' : 'umum.upz.laporan-setoran';
+
+    const breadcrumbs: BreadcrumbItem[] = diPkp
+        ? [
+              { title: 'PKP', href: '/pkp' },
+              { title: 'Laporan Setoran UPZ', href: '/pkp/laporan-setoran-upz' },
+          ]
+        : [
+              { title: 'UPZ', href: '/umum/upz' },
+              { title: 'Laporan Setoran UPZ', href: '/umum/upz/laporan-setoran' },
+          ];
 
     const tahunPilihan = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 4 + i);
 
@@ -31,11 +53,14 @@ export default function LaporanSetoranUpz({ tahun, baris, total_semua }: { tahun
             header: 'Nama UPZ',
             sortable: true,
             sortValue: (b) => b.nama,
-            cell: (b) => (
-                <Link href={route('umum.upz.show', b.id)} className="text-foreground hover:text-primary font-medium hover:underline">
-                    {b.nama}
-                </Link>
-            ),
+            cell: (b) =>
+                bisa_lihat_upz ? (
+                    <Link href={route('umum.upz.show', b.id)} className="text-foreground hover:text-primary font-medium hover:underline">
+                        {b.nama}
+                    </Link>
+                ) : (
+                    <span className="text-foreground font-medium">{b.nama}</span>
+                ),
         },
         { id: 'jenis', header: 'Jenis', cell: (b) => b.jenis_upz },
         { id: 'wilayah', header: 'Wilayah', cell: (b) => b.wilayah },
@@ -70,7 +95,7 @@ export default function LaporanSetoranUpz({ tahun, baris, total_semua }: { tahun
                         <div className="flex items-center gap-2">
                             <Select
                                 value={String(tahun)}
-                                onValueChange={(nilai) => router.get(route('umum.upz.laporan-setoran'), { tahun: nilai })}
+                                onValueChange={(nilai) => router.get(route(routeLaporan), { tahun: nilai })}
                             >
                                 <SelectTrigger className="h-9 w-28" aria-label="Tahun laporan">
                                     <SelectValue />
@@ -84,7 +109,9 @@ export default function LaporanSetoranUpz({ tahun, baris, total_semua }: { tahun
                                 </SelectContent>
                             </Select>
                             <Button asChild variant="outline" className="h-9">
-                                <Link href={route('umum.upz.index')}>Kembali ke Daftar UPZ</Link>
+                                <Link href={route(diPkp ? 'pkp.index' : 'umum.upz.index')}>
+                                    {diPkp ? 'Kembali ke Dasbor PKP' : 'Kembali ke Daftar UPZ'}
+                                </Link>
                             </Button>
                         </div>
                     }

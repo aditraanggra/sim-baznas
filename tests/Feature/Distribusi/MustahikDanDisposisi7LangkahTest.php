@@ -286,3 +286,46 @@ it('PDP-T04 K8: non-admin pembuat permohonan tetap ditolak maker-checker saat AC
         'nominal_disetujui' => 500_000,
     ]))->toThrow(ValidationException::class);
 });
+
+it('PDP-T03 & PDP-T12: permohonan memisahkan data pemohon vs mustahik dan menerbitkan PDF bukti kode lacak publik', function () {
+    $pelayanan = User::factory()->create()->assignRole(['pelayanan_mustahik', 'amil']);
+    $this->actingAs($pelayanan);
+
+    $mustahik = app(SimpanMustahik::class)->jalankan([
+        'jenis' => 'perorangan',
+        'nama' => 'Nenek Maryam',
+        'telepon' => '081200001111',
+    ]);
+    $program = Program::where('sub_bidang', 'pendistribusian')->firstOrFail();
+    $infak = JenisDana::where('kode', 'INFAK')->firstOrFail();
+
+    // Bila pemohon_sama_mustahik = false, nama dan telepon pemohon wajib diisi.
+    expect(fn () => app(BuatPermohonan::class)->jalankan([
+        'mustahik_id' => $mustahik->id,
+        'pemohon_sama_mustahik' => false,
+        'program_id' => $program->id,
+        'jenis_dana_id' => $infak->id,
+        'nominal_diajukan' => 750_000,
+    ]))->toThrow(ValidationException::class);
+
+    $permohonan = app(BuatPermohonan::class)->jalankan([
+        'mustahik_id' => $mustahik->id,
+        'pemohon_sama_mustahik' => false,
+        'pemohon_nama' => 'Ustadz Hasan',
+        'pemohon_telepon' => '085788889999',
+        'pemohon_hubungan' => 'Pengurus DKM / RT / RW',
+        'pemohon_alamat' => 'Kp. Sadewata RT 02',
+        'program_id' => $program->id,
+        'jenis_dana_id' => $infak->id,
+        'nominal_diajukan' => 750_000,
+        'uraian' => 'Bantuan biaya berobat lansia',
+    ]);
+
+    expect($permohonan->pemohon_sama_mustahik)->toBeFalse()
+        ->and($permohonan->pemohon_nama)->toBe('Ustadz Hasan')
+        ->and($permohonan->pemohon_telepon)->toBe('085788889999');
+
+    $pdf = $this->get(route('distribusi.permohonan.tanda-terima', $permohonan));
+    $pdf->assertOk()->assertHeader('content-type', 'application/pdf');
+    expect($pdf->getContent())->toStartWith('%PDF-');
+});

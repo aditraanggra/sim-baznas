@@ -73,7 +73,9 @@ class MustahikController extends Controller
     {
         $mustahik = $action->jalankan($request->all());
 
-        return back()->with('sukses', "Data mustahik {$mustahik->nama} ({$mustahik->kode}) berhasil disimpan.");
+        return back()
+            ->with('sukses', "Data mustahik {$mustahik->nama} ({$mustahik->kode}) berhasil disimpan.")
+            ->with('mustahik_baru_id', $mustahik->id);
     }
 
     public function show(Request $request, Mustahik $mustahik, IdentitasPribadiService $identitas, BerkasPrivatService $berkasService): Response

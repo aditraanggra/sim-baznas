@@ -10,6 +10,9 @@
                 {{ $kop['alamat'] ?? '' }}
             </div>
             <div class="kop-kontak">
+                @if (! empty($kop['whatsapp']))
+                    Whatsapp: {{ $kop['whatsapp'] }} |
+                @endif
                 Telp: {{ $kop['telepon'] ?? '-' }} | Email: {{ $kop['email'] ?? '-' }}
                 @if (! empty($kop['website']))
                     | Web: {{ $kop['website'] }}

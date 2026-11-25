@@ -3,6 +3,7 @@
 use App\Http\Controllers\BerkasPrivatController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PencarianGlobalController;
+use App\Http\Controllers\Umum\DasborUmumController;
 use App\Models\AuditLog;
 use App\Models\ImportJob;
 use App\Models\PosAlias;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
@@ -33,29 +34,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibaca'])->name('notifikasi.baca');
     Route::post('notifikasi/baca-semua', [NotifikasiController::class, 'tandaiSemuaDibaca'])->name('notifikasi.baca-semua');
 
-    foreach ([
-        'umum' => 'SDM, Administrasi dan Umum',
-    ] as $kodeBidang => $namaBidang) {
-        Route::get($kodeBidang, fn () => Inertia::render('modul/bidang-dashboard', [
-            'bidang' => config("sisfozis.bidang.{$kodeBidang}"),
-            'ringkasan' => null,
-        ]))->middleware("bidang:{$kodeBidang},view")->name("{$kodeBidang}.index");
-    }
-
-    Route::get('pkp', fn () => Inertia::render('modul/bidang-dashboard', [
-        'bidang' => config('sisfozis.bidang.pkp'),
-        'ringkasan' => [
-            'total_pos' => PosAnggaran::where('aktif', true)->count(),
-            'total_alias' => PosAlias::count(),
-            'impor_berjalan' => ImportJob::whereIn('status', ['menunggu', 'proses'])->count(),
-            'audit_terakhir' => AuditLog::latest('id')->value('created_at')?->toIso8601String(),
-        ],
-    ]))->middleware('bidang:pkp,view')->name('pkp.index');
+    Route::get('umum', [DasborUmumController::class, 'index'])
+        ->middleware('bidang:umum,view')
+        ->name('umum.index');
 
     foreach ([
-        'realisasi' => ['Realisasi', 'Modul PK2. Input bulanan, penguncian periode, dan capaian dikerjakan di modul ini.'],
-        'kinerja' => ['Kinerja', 'Modul PK3. Perbandingan antar tahun dan capaian terhadap RKAT dikerjakan di modul ini.'],
-        'keuangan' => ['Keuangan', 'Modul PK4. Laporan keuangan sesuai format menunggu jawaban Q1.'],
+        'kinerja' => ['Kinerja', 'Modul RENSTRA, RENJA & Laporan Kinerja — dijadwalkan pada Gelombang 2 Fase 1B (PRC-T05 s.d. PRC-T07).'],
+        'keuangan' => ['Keuangan', 'Modul Keuangan & PSAK 109 — dijadwalkan pada Fase 2 (KEU-T01 s.d. KEU-T06).'],
     ] as $slug => [$judul, $keterangan]) {
         Route::get("pkp/{$slug}", fn () => Inertia::render('pkp/placeholder', ['judul' => $judul, 'keterangan' => $keterangan]))->name("pkp.{$slug}");
     }
@@ -69,6 +54,7 @@ require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/pengaturan.php';
 require __DIR__.'/rencana.php';
+require __DIR__.'/perencanaan.php';
 require __DIR__.'/pengumpulan.php';
 require __DIR__.'/distribusi.php';
 require __DIR__.'/umum.php';

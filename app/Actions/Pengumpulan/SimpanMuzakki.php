@@ -70,11 +70,20 @@ class SimpanMuzakki extends Action
     {
         $id = isset($data['id']) && $data['id'] !== '' ? (int) $data['id'] : null;
 
+        $data['npwz'] = isset($data['npwz']) && trim((string) $data['npwz']) !== ''
+            ? trim((string) $data['npwz'])
+            : null;
+        $data['jenis_kelamin'] = isset($data['jenis_kelamin']) && trim((string) $data['jenis_kelamin']) !== ''
+            ? strtoupper(trim((string) $data['jenis_kelamin']))
+            : null;
+
         $tervalidasi = validator($data, [
             'id' => ['nullable', 'integer', 'exists:muzakki,id'],
             'kode' => ['nullable', 'string', 'max:32', Rule::unique('muzakki', 'kode')->ignore($id)],
+            'npwz' => ['nullable', 'string', 'max:32', Rule::unique('muzakki', 'npwz')->ignore($id)],
             'jenis' => ['required', Rule::in(['perorangan', 'lembaga'])],
             'nama' => ['required', 'string', 'max:160'],
+            'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
             'nik' => ['nullable', 'digits:16'],
             'npwp' => ['nullable', 'string', 'max:32'],
             'telepon' => ['nullable', 'string', 'max:32'],
@@ -103,7 +112,7 @@ class SimpanMuzakki extends Action
 
         return DB::transaction(function () use ($tervalidasi, $id, $nikBaru, $nikHash): Muzakki {
             $muzakki = $id ? Muzakki::findOrFail($id) : new Muzakki;
-            $lama = $muzakki->exists ? $muzakki->only(['kode', 'jenis', 'nama', 'nik_masked', 'telepon', 'desa_id', 'aktif']) : null;
+            $lama = $muzakki->exists ? $muzakki->only(['kode', 'npwz', 'jenis', 'nama', 'jenis_kelamin', 'nik_masked', 'telepon', 'desa_id', 'aktif']) : null;
 
             $kecamatanId = $tervalidasi['kecamatan_id'] ?? null;
             if ($kecamatanId === null && ! empty($tervalidasi['desa_id'])) {
@@ -118,8 +127,10 @@ class SimpanMuzakki extends Action
 
             $atribut = [
                 'kode' => $kode,
+                'npwz' => $tervalidasi['npwz'] ?? null,
                 'jenis' => $tervalidasi['jenis'],
                 'nama' => trim((string) $tervalidasi['nama']),
+                'jenis_kelamin' => $tervalidasi['jenis'] === 'lembaga' ? null : ($tervalidasi['jenis_kelamin'] ?? null),
                 'npwp' => $tervalidasi['npwp'] ?? null,
                 'telepon' => $tervalidasi['telepon'] ?? null,
                 'telepon_norm' => $telpNorm,
@@ -147,7 +158,7 @@ class SimpanMuzakki extends Action
                 Muzakki::class,
                 $muzakki->id,
                 $lama,
-                $muzakki->only(['kode', 'jenis', 'nama', 'nik_masked', 'telepon', 'desa_id', 'aktif']),
+                $muzakki->only(['kode', 'npwz', 'jenis', 'nama', 'jenis_kelamin', 'nik_masked', 'telepon', 'desa_id', 'aktif']),
             );
 
             return $muzakki;

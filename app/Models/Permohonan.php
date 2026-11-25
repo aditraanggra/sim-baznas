@@ -18,6 +18,11 @@ class Permohonan extends Model
         'kode_tracking',
         'tanggal',
         'mustahik_id',
+        'pemohon_sama_mustahik',
+        'pemohon_nama',
+        'pemohon_telepon',
+        'pemohon_hubungan',
+        'pemohon_alamat',
         'program_id',
         'sub_bidang',
         'jenis_dana_id',
@@ -41,11 +46,26 @@ class Permohonan extends Model
     {
         return [
             'tanggal' => 'date',
+            'pemohon_sama_mustahik' => 'boolean',
             'nominal_diajukan' => 'integer',
             'nominal_disetujui' => 'integer',
             'langkah_sekarang' => 'integer',
             'keuangan_siap_at' => 'datetime',
         ];
+    }
+
+    public function namaPemohonEfektif(): ?string
+    {
+        return $this->pemohon_sama_mustahik
+            ? $this->mustahik?->nama
+            : ($this->pemohon_nama ?: $this->mustahik?->nama);
+    }
+
+    public function teleponPemohonEfektif(): ?string
+    {
+        return $this->pemohon_sama_mustahik
+            ? $this->mustahik?->telepon
+            : ($this->pemohon_telepon ?: $this->mustahik?->telepon);
     }
 
     /**

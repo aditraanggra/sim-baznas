@@ -21,8 +21,10 @@ interface Props {
     muzakki: {
         id: number;
         kode: string;
+        npwz: string | null;
         jenis: string;
         nama: string;
+        jenis_kelamin: 'L' | 'P' | null;
         nik_masked: string | null;
         npwp: string | null;
         telepon: string | null;
@@ -67,7 +69,7 @@ export default function MuzakkiShow({ muzakki, setoran, total_setoran_final }: P
             <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-5 p-4 sm:p-6">
                 <PageHeader
                     title={muzakki.nama}
-                    description={`${muzakki.kode} · ${muzakki.jenis === 'lembaga' ? 'Lembaga' : 'Perorangan'}`}
+                    description={`${muzakki.kode} · ${muzakki.jenis === 'lembaga' ? 'Lembaga' : 'Perorangan'}${muzakki.jenis === 'perorangan' && muzakki.jenis_kelamin ? ` · ${muzakki.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}` : ''}`}
                     breadcrumbs={breadcrumbs}
                     actions={
                         <>
@@ -84,6 +86,7 @@ export default function MuzakkiShow({ muzakki, setoran, total_setoran_final }: P
                 <section className="bg-card border-border grid gap-4 rounded-xl border p-5 sm:grid-cols-3">
                     <div>
                         <p className="text-muted-foreground text-xs font-medium">Identitas & Kontak</p>
+                        {muzakki.npwz && <p className="text-foreground mt-1 text-sm font-medium tabular-nums">NPWZ: {muzakki.npwz}</p>}
                         <p className="text-foreground mt-1 text-sm tabular-nums">
                             {muzakki.nik_masked ? `NIK: ${muzakki.nik_masked}` : muzakki.npwp ? `NPWP: ${muzakki.npwp}` : 'NIK belum diisi'}
                         </p>

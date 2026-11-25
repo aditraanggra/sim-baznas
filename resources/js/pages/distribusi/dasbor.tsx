@@ -9,16 +9,6 @@ import { CheckSquare, HandHeart, Inbox, Users, Wallet } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Pendistribusian', href: '/distribusi' }];
 
-interface SaldoKelompok {
-    dana_kelompok_id: number;
-    kode: string;
-    nama: string;
-    total_masuk: number;
-    total_keluar: number;
-    total_komitmen: number;
-    saldo_tersedia: number;
-}
-
 interface PermohonanRingkas {
     id: number;
     nomor: string;
@@ -37,12 +27,22 @@ interface Props {
         permohonan_aktif: number;
         mustahik_terverifikasi: number;
     };
-    saldo_kelompok: SaldoKelompok[];
+    grafik_program: ChartDatum[];
     grafik_asnaf: ChartDatum[];
     permohonan_terbaru: PermohonanRingkas[];
 }
 
-export default function DasborPendistribusian({ ringkasan, saldo_kelompok, grafik_asnaf, permohonan_terbaru }: Props) {
+export default function DasborPendistribusian({
+    ringkasan = {
+        total_dicairkan_bulan: 0,
+        jumlah_mustahik_bulan: 0,
+        permohonan_aktif: 0,
+        mustahik_terverifikasi: 0,
+    },
+    grafik_program = [],
+    grafik_asnaf = [],
+    permohonan_terbaru = [],
+}: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dasbor Pendistribusian & Pendayagunaan" />
@@ -50,7 +50,7 @@ export default function DasborPendistribusian({ ringkasan, saldo_kelompok, grafi
             <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-5 p-4 sm:p-6">
                 <PageHeader
                     title="Dasbor Pendistribusian & Pendayagunaan"
-                    description="Pantau saldo kelompok dana, antrean disposisi 7 langkah, dan realisasi penyaluran bantuan."
+                    description="Pantau antrean disposisi 7 langkah, distribusi per asnaf & program, dan realisasi penyaluran bantuan."
                     breadcrumbs={breadcrumbs}
                     actions={
                         <>
@@ -118,27 +118,15 @@ export default function DasborPendistribusian({ ringkasan, saldo_kelompok, grafi
 
                 <div className="grid gap-5 lg:grid-cols-2">
                     <section className="bg-card border-border rounded-2xl border p-5">
-                        <h2 className="text-foreground text-base font-semibold">Saldo per Kelompok Dana</h2>
+                        <h2 className="text-foreground text-base font-semibold">Penyaluran per Program Bulan Ini</h2>
                         <p className="text-muted-foreground mt-0.5 text-xs">
-                            Dihitung dari penerimaan final dikurangi penyaluran disetujui dan dicairkan.
+                            Realisasi penyaluran berstatus dicairkan berdasarkan program pendistribusian dan pendayagunaan.
                         </p>
-                        {saldo_kelompok.length === 0 ? (
-                            <EmptyState title="Belum Ada Data Kelompok Dana" description="Kelompok dana akan muncul setelah data master tersedia." />
+                        {grafik_program.length === 0 ? (
+                            <EmptyState title="Belum Ada Penyaluran Bulan Ini" description="Grafik program akan tampil setelah penyaluran dicairkan." />
                         ) : (
-                            <div className="mt-4 space-y-3">
-                                {saldo_kelompok.map((s) => (
-                                    <div key={s.dana_kelompok_id} className="border-border flex items-center justify-between rounded-xl border px-3.5 py-2.5">
-                                        <div>
-                                            <p className="text-foreground text-sm font-medium">{s.nama}</p>
-                                            <p className="text-muted-foreground text-xs">
-                                                Masuk {formatRupiah(s.total_masuk)} · Keluar {formatRupiah(s.total_keluar + s.total_komitmen)}
-                                            </p>
-                                        </div>
-                                        <span className={`text-sm font-semibold tabular-nums ${s.saldo_tersedia < 0 ? 'text-destructive' : 'text-foreground'}`}>
-                                            {formatRupiah(s.saldo_tersedia)}
-                                        </span>
-                                    </div>
-                                ))}
+                            <div className="mt-4">
+                                <BarComparisonChart title="Realisasi Penyaluran per Program" data={grafik_program} isCurrency height={260} />
                             </div>
                         )}
                     </section>

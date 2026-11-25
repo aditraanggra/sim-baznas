@@ -80,7 +80,7 @@ class PenerimaanController extends Controller
                     'keterangan' => $i->keterangan ?? '',
                 ])->values()->all(),
             ] : null,
-            'muzakki_list' => Muzakki::where('aktif', true)->orderBy('nama')->get(['id', 'kode', 'nama', 'nik_masked', 'telepon']),
+            'muzakki_list' => Muzakki::where('aktif', true)->orderBy('nama')->get(['id', 'kode', 'npwz', 'nama', 'nik_masked', 'telepon']),
             'sumber_dana_list' => SumberDana::with('jenisDana:id,nama')->where('aktif', true)->orderBy('id')->get()
                 ->map(fn (SumberDana $s) => ['id' => $s->id, 'kode' => $s->kode, 'nama' => $s->nama, 'jenis_dana' => $s->jenisDana?->nama]),
             'metode_bayar_list' => MetodeBayar::where('aktif', true)->orderBy('id')->get(['id', 'kode', 'nama', 'butuh_rekening']),
@@ -93,24 +93,24 @@ class PenerimaanController extends Controller
 
     public function storeDraft(Request $request, SimpanDraftPenerimaan $action): RedirectResponse
     {
-        $penerimaan = $action->jalankan($request->all());
+        $action->jalankan($request->all());
 
-        return to_route('pengumpulan.penerimaan.create', ['draft_id' => $penerimaan->id])
-            ->with('sukses', 'Draft penerimaan tersimpan.');
+        return to_route('pengumpulan.penerimaan.index')
+            ->with('sukses', 'Draft penerimaan tersimpan di daftar penerimaan.');
     }
 
     public function finalkan(Request $request, FinalkanPenerimaan $action): RedirectResponse
     {
         $penerimaan = $action->jalankan($request->all());
 
-        return to_route('pengumpulan.penerimaan.show', $penerimaan)
+        return to_route('pengumpulan.penerimaan.show', [$penerimaan, 'cetak' => 1])
             ->with('sukses', "Penerimaan difinalkan. Kwitansi {$penerimaan->kwitansi?->nomor} siap dicetak.");
     }
 
     public function show(Request $request, Penerimaan $penerimaan): Response
     {
         $penerimaan->load([
-            'muzakki:id,kode,jenis,nama,nik_masked,telepon,alamat',
+            'muzakki:id,kode,npwz,jenis,nama,jenis_kelamin,nik_masked,telepon,alamat',
             'upz:id,kode,nama',
             'metodeBayar:id,nama',
             'rekening:id,bank,no_rekening,atas_nama',

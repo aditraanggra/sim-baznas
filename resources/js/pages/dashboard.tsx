@@ -1,4 +1,3 @@
-import AppLogoIcon from '@/components/app-logo-icon';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Toaster } from '@/components/ui/sonner';
@@ -49,7 +48,7 @@ const DAFTAR_KARTU: KartuDefinisi[] = [
         kode: 'pkp',
         judul: 'Perencanaan, Keuangan dan Pelaporan',
         deskripsi: 'Penyusunan RKAT dan revisi, RENJA, RENSTRA, laporan kinerja, kas, jurnal PSAK 109, dan arsip dokumen.',
-        href: '/pkp/rencana',
+        href: '/pkp',
         latarStyle: { backgroundColor: '#5B21B6' },
         teksGelap: false,
         ikon: BookOpen,
@@ -70,8 +69,8 @@ export default function Dashboard() {
             <header className="bg-card border-border border-b">
                 <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
                     <div className="flex min-w-0 items-center gap-3">
-                        <div className="bg-brand flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white">
-                            <AppLogoIcon className="h-6 w-6 fill-current" />
+                        <div className="flex shrink-0 items-center justify-center rounded-lg border border-white/25 bg-white px-2 py-1 shadow-sm">
+                            <img src="/images/logo-baznas.png" alt="Logo BAZNAS" className="h-8 w-auto object-contain" />
                         </div>
                         <div className="min-w-0">
                             <p className="font-display text-foreground truncate text-base font-semibold">SISFOZIS</p>

@@ -2,6 +2,7 @@ import { PageHeader, StatusBadge } from '@/components/app';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/sonner';
 import AppLayout from '@/layouts/app-layout';
 import { formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
@@ -17,7 +18,16 @@ interface Props {
         status: string;
         catatan: string | null;
         petugas: string | null;
-        muzakki: { id: number; kode: string; nama: string; nik_masked: string | null; telepon: string | null; alamat: string | null } | null;
+        muzakki: {
+            id: number;
+            kode: string;
+            npwz: string | null;
+            nama: string;
+            jenis_kelamin: string | null;
+            nik_masked: string | null;
+            telepon: string | null;
+            alamat: string | null;
+        } | null;
         upz: { id: number; kode: string; nama: string } | null;
         metode: string | null;
         rekening: string | null;
@@ -49,6 +59,27 @@ interface Props {
 
 export default function PenerimaanShow({ penerimaan, bisa_ajukan_batal, bisa_setujui_batal }: Props) {
     const [dialogBatal, setDialogBatal] = React.useState(false);
+    const [blokirPopup, setBlokirPopup] = React.useState(false);
+    const sudahAutoCetakRef = React.useRef(false);
+
+    React.useEffect(() => {
+        if (sudahAutoCetakRef.current || !penerimaan.kwitansi || typeof window === 'undefined') {
+            return;
+        }
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('cetak') === '1') {
+            sudahAutoCetakRef.current = true;
+            const win = window.open(route('pengumpulan.penerimaan.kwitansi', penerimaan.id), '_blank', 'noopener,noreferrer');
+            if (!win) {
+                setBlokirPopup(true);
+                toast.warning('Pop-up cetak kwitansi diblokir browser. Klik tombol Cetak Kwitansi.');
+            }
+            params.delete('cetak');
+            const sisa = params.toString();
+            const urlBaru = `${window.location.pathname}${sisa ? `?${sisa}` : ''}`;
+            window.history.replaceState({}, '', urlBaru);
+        }
+    }, [penerimaan.id, penerimaan.kwitansi]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Daftar Penerimaan', href: '/pengumpulan/penerimaan' },
@@ -107,6 +138,17 @@ export default function PenerimaanShow({ penerimaan, bisa_ajukan_batal, bisa_set
                     }
                 />
 
+                {blokirPopup && penerimaan.kwitansi && (
+                    <div className="bg-warning-soft border-warning/30 text-warning flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-3 text-sm">
+                        <span>Browser memblokir jendela cetak kwitansi otomatis. Klik tombol di kanan untuk membuka PDF kwitansi.</span>
+                        <Button asChild size="sm" variant="outline" className="h-8">
+                            <a href={route('pengumpulan.penerimaan.kwitansi', penerimaan.id)} target="_blank" rel="noopener noreferrer">
+                                Buka Kwitansi PDF
+                            </a>
+                        </Button>
+                    </div>
+                )}
+
                 {penerimaan.status === 'batal' && (
                     <div className="bg-destructive-soft border-destructive/25 text-destructive rounded-xl border px-4 py-3 text-sm font-medium">
                         Transaksi ini telah DIBATALKAN melalui persetujuan maker-checker dan tidak dihitung dalam laporan maupun saldo dana.
@@ -133,7 +175,14 @@ export default function PenerimaanShow({ penerimaan, bisa_ajukan_batal, bisa_set
                                             '-'
                                         )}
                                     </dd>
-                                    <dd className="text-muted-foreground text-xs">{penerimaan.muzakki?.nik_masked ?? '-'}</dd>
+                                    <dd className="text-muted-foreground text-xs">
+                                        {[
+                                            penerimaan.muzakki?.npwz ? `NPWZ: ${penerimaan.muzakki.npwz}` : null,
+                                            penerimaan.muzakki?.nik_masked,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ') || '-'}
+                                    </dd>
                                 </div>
                                 <div>
                                     <dt className="text-muted-foreground text-xs">Metode & Rekening</dt>

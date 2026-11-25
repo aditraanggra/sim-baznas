@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Mustahik;
 use App\Models\Penyaluran;
 use App\Models\Permohonan;
-use App\Services\SaldoDanaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +14,7 @@ use Inertia\Response;
 
 class DasborPendistribusianController extends Controller
 {
-    public function index(Request $request, SaldoDanaService $saldoService): Response
+    public function index(Request $request): Response
     {
         $awalBulan = Carbon::today()->startOfMonth()->toDateString();
         $akhirBulan = Carbon::today()->endOfMonth()->toDateString();
@@ -53,6 +52,18 @@ class DasborPendistribusianController extends Controller
             ->map(fn ($r) => ['label' => $r->label, 'nilai' => (int) $r->nilai])
             ->all();
 
+        $perProgram = DB::table('penyaluran_item as pyi')
+            ->join('penyaluran as py', 'py.id', '=', 'pyi.penyaluran_id')
+            ->join('program as pr', 'pr.id', '=', 'py.program_id')
+            ->where('py.status', 'dicairkan')
+            ->whereBetween('py.tanggal', [$awalBulan, $akhirBulan])
+            ->groupBy('pr.nama')
+            ->selectRaw('pr.nama as label, SUM(pyi.jumlah)::bigint as nilai')
+            ->orderByDesc('nilai')
+            ->get()
+            ->map(fn ($r) => ['label' => $r->label, 'nilai' => (int) $r->nilai])
+            ->all();
+
         $permohonanTerbaru = Permohonan::query()
             ->with(['mustahik:id,nama', 'program:id,nama'])
             ->latest('id')
@@ -76,7 +87,7 @@ class DasborPendistribusianController extends Controller
                 'permohonan_aktif' => $permohonanAktif,
                 'mustahik_terverifikasi' => $mustahikTerverifikasi,
             ],
-            'saldo_kelompok' => $saldoService->semuaSaldo()->values()->all(),
+            'grafik_program' => $perProgram,
             'grafik_asnaf' => $perAsnaf,
             'permohonan_terbaru' => $permohonanTerbaru,
         ]);
