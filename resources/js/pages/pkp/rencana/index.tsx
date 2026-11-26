@@ -1,8 +1,14 @@
+import { InputRupiah } from '@/components/app';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Archive, CheckCircle2, CircleDashed, Send, type LucideIcon } from 'lucide-react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Archive, CheckCircle2, CircleDashed, Plus, Send, type LucideIcon } from 'lucide-react';
+import * as React from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Rencana (RKAT)', href: '/pkp/rencana' }];
 
@@ -10,6 +16,7 @@ interface VersiRingkas {
     id: number;
     label: string;
     status: string;
+    mode_penyusunan?: string;
 }
 
 interface BarisTahun {
@@ -18,6 +25,9 @@ interface BarisTahun {
     acuan_label: string | null;
     status: string | null;
     sumber: string | null;
+    mode_penyusunan?: string | null;
+    target_pengumpulan?: number | null;
+    tahap_terverifikasi?: number | null;
     nomor_surat: string | null;
     total_penerimaan: number | null;
     total_penyaluran: number | null;
@@ -54,6 +64,22 @@ export default function Index({ daftar, dapat_tulis }: { daftar: BarisTahun[]; d
     const { props } = usePage<SharedData>();
     const galat = Object.values(props.errors ?? {});
     const sukses = props.flash?.sukses;
+    const [dialogKolaboratif, setDialogKolaboratif] = React.useState(false);
+
+    const formKolaboratif = useForm({
+        tahun: Math.max(new Date().getFullYear() + 1, 2027),
+        jenis: 'awal',
+        mode_penyusunan: 'kolaboratif',
+        target_pengumpulan: 0,
+    });
+
+    const buatKolaboratif = (e: React.FormEvent) => {
+        e.preventDefault();
+        formKolaboratif.post(route('pkp.rencana.buat'), {
+            preserveScroll: true,
+            onSuccess: () => setDialogKolaboratif(false),
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -61,14 +87,20 @@ export default function Index({ daftar, dapat_tulis }: { daftar: BarisTahun[]; d
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <h1 className="text-lg font-semibold">Rencana Kerja dan Anggaran Tahunan</h1>
-                    <div className="flex gap-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
                         <Link className="underline" href={route('pkp.rencana.bandingkan')}>
                             Bandingkan
                         </Link>
                         {dapat_tulis && (
-                            <Link className="underline" href={route('pkp.rencana.impor')}>
-                                Impor RKAT
-                            </Link>
+                            <>
+                                <Link className="underline" href={route('pkp.rencana.impor')}>
+                                    Impor RKAT
+                                </Link>
+                                <Button type="button" className="h-9" onClick={() => setDialogKolaboratif(true)}>
+                                    <Plus className="h-4 w-4" aria-hidden="true" />
+                                    Buat RKAT Kolaboratif
+                                </Button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -106,7 +138,14 @@ export default function Index({ daftar, dapat_tulis }: { daftar: BarisTahun[]; d
                             {daftar.map((b) => (
                                 <tr key={b.tahun} className="border-t align-top">
                                     <td className="px-3 py-2 font-medium tabular-nums">{b.tahun}</td>
-                                    <td className="px-3 py-2">{b.acuan_label ?? '—'}</td>
+                                    <td className="px-3 py-2">
+                                        <div>{b.acuan_label ?? '—'}</div>
+                                        {b.mode_penyusunan === 'kolaboratif' && (
+                                            <span className="bg-primary-soft text-primary mt-0.5 inline-block rounded px-1.5 py-0.5 text-[11px] font-medium">
+                                                Kolaboratif ({b.tahap_terverifikasi ?? 0}/3 bidang)
+                                            </span>
+                                        )}
+                                    </td>
                                     <td className="px-3 py-2">
                                         <LencanaStatus status={b.status} />
                                     </td>
@@ -184,6 +223,53 @@ export default function Index({ daftar, dapat_tulis }: { daftar: BarisTahun[]; d
                         </tbody>
                     </table>
                 </div>
+
+                <Dialog open={dialogKolaboratif} onOpenChange={setDialogKolaboratif}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Buat RKAT Kolaboratif 3 Bidang</DialogTitle>
+                            <DialogDescription>
+                                Tetapkan Target Pengumpulan RAKORNAS untuk membuka penyusunan rincian kegiatan di Bidang Pengumpulan, Pendis/Pendag,
+                                dan SAU.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form onSubmit={buatKolaboratif} className="space-y-4">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="rkat-tahun">Tahun Anggaran</Label>
+                                <Input
+                                    id="rkat-tahun"
+                                    type="number"
+                                    min={2022}
+                                    max={2100}
+                                    className="h-9 tabular-nums"
+                                    value={formKolaboratif.data.tahun}
+                                    onChange={(e) => formKolaboratif.setData('tahun', Number.parseInt(e.target.value || '2027', 10))}
+                                />
+                                {formKolaboratif.errors.tahun && <p className="text-destructive text-xs">{formKolaboratif.errors.tahun}</p>}
+                            </div>
+
+                            <InputRupiah
+                                id="rkat-target"
+                                label="Target Pengumpulan RAKORNAS (L2 Neraca)"
+                                required
+                                value={formKolaboratif.data.target_pengumpulan}
+                                onChange={(val) => formKolaboratif.setData('target_pengumpulan', val)}
+                                error={formKolaboratif.errors.target_pengumpulan}
+                                tampilkanTerbilang
+                            />
+
+                            <DialogFooter>
+                                <Button type="button" variant="outline" className="h-9" onClick={() => setDialogKolaboratif(false)}>
+                                    Batal
+                                </Button>
+                                <Button type="submit" className="h-9" disabled={formKolaboratif.processing || formKolaboratif.data.target_pengumpulan <= 0}>
+                                    {formKolaboratif.processing ? 'Membuat...' : 'Buat RKAT & Tetapkan Target'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

@@ -5,6 +5,7 @@ use App\Http\Controllers\Pengumpulan\DasborPengumpulanController;
 use App\Http\Controllers\Pengumpulan\LaporanPenerimaanController;
 use App\Http\Controllers\Pengumpulan\MuzakkiController;
 use App\Http\Controllers\Pengumpulan\PenerimaanController;
+use App\Http\Controllers\RkatBidangController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'bidang:pengumpulan,view'])
@@ -12,6 +13,16 @@ Route::middleware(['auth', 'bidang:pengumpulan,view'])
     ->name('pengumpulan.')
     ->group(function () {
         Route::get('/', [DasborPengumpulanController::class, 'index'])->name('index');
+
+        Route::prefix('rkat')->name('rkat.')->group(function () {
+            Route::get('/', [RkatBidangController::class, 'index'])->name('index')->defaults('bidang', 'pengumpulan');
+            Route::middleware('peran:kabag_pengumpulan,admin')->group(function () {
+                Route::post('jenis-kegiatan', [RkatBidangController::class, 'simpanJenisKegiatan'])->name('jenis-kegiatan')->defaults('bidang', 'pengumpulan');
+                Route::post('kegiatan', [RkatBidangController::class, 'simpanKegiatan'])->name('kegiatan')->defaults('bidang', 'pengumpulan');
+                Route::post('pelengkap', [RkatBidangController::class, 'simpanPelengkap'])->name('pelengkap')->defaults('bidang', 'pengumpulan');
+                Route::post('{versi}/ajukan', [RkatBidangController::class, 'ajukan'])->name('ajukan')->defaults('bidang', 'pengumpulan');
+            });
+        });
 
         Route::get('muzakki', [MuzakkiController::class, 'index'])->name('muzakki.index');
         Route::get('muzakki/cek-duplikat', [MuzakkiController::class, 'cekDuplikat'])->name('muzakki.cek-duplikat');

@@ -27,6 +27,10 @@ class SimpanNilaiRkat extends RkatAction
             $versi = $this->versiTerkunci($data['rkat_version_id']);
             $this->pastikanDraft($versi);
 
+            if ($versi->isKolaboratif()) {
+                $this->gagal('versi', 'Versi RKAT kolaboratif bersifat konsolidasi (read-only); perubahan angka dilakukan melalui menu Perencanaan RKAT masing-masing bidang.');
+            }
+
             $pos = PosAnggaran::whereIn('id', array_keys($data['nilai']))->get()->keyBy('id');
             foreach ($data['nilai'] as $id => $nilai) {
                 $p = $pos->get($id);

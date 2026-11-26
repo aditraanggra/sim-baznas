@@ -17,6 +17,8 @@ Route::middleware(['auth'])->prefix('pkp/rencana')->group(function () {
     // Tulis: perencanaan, kabag_pkp, dan admin (Action menegakkan ulang peran dan status).
     Route::middleware('peran:perencanaan,kabag_pkp,admin')->group(function () {
         Route::post('/', [RencanaController::class, 'buat'])->name('pkp.rencana.buat');
+        Route::post('versi/{versi}/target', [RencanaController::class, 'tetapkanTarget'])->name('pkp.rencana.target');
+        Route::post('versi/{versi}/aturan-amil', [RencanaController::class, 'simpanAturanAmil'])->name('pkp.rencana.aturan-amil');
         Route::post('versi/{versi}/nilai', [RencanaController::class, 'simpanNilai'])->name('pkp.rencana.nilai');
         Route::post('versi/{versi}/catatan', [RencanaController::class, 'simpanCatatan'])->name('pkp.rencana.catatan');
         Route::post('versi/{versi}/ajukan', [RencanaController::class, 'ajukan'])->name('pkp.rencana.ajukan');
@@ -30,5 +32,11 @@ Route::middleware(['auth'])->prefix('pkp/rencana')->group(function () {
         Route::post('impor/alias', [ImporRencanaController::class, 'alias'])->name('pkp.rencana.impor.alias');
         Route::get('impor/{job}', [ImporRencanaController::class, 'pratinjau'])->name('pkp.rencana.impor.pratinjau');
         Route::post('impor/{job}/terapkan', [ImporRencanaController::class, 'terapkan'])->name('pkp.rencana.impor.terapkan');
+    });
+
+    // Verifikasi & kembalikan tahap bidang: khusus Kabag PKP dan Admin.
+    Route::middleware('peran:kabag_pkp,admin')->group(function () {
+        Route::post('versi/{versi}/tahap/{bidang}/verifikasi', [RencanaController::class, 'verifikasiTahap'])->name('pkp.rencana.tahap.verifikasi');
+        Route::post('versi/{versi}/tahap/{bidang}/kembalikan', [RencanaController::class, 'kembalikanTahap'])->name('pkp.rencana.tahap.kembalikan');
     });
 });

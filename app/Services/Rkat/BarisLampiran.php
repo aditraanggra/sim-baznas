@@ -2,6 +2,8 @@
 
 namespace App\Services\Rkat;
 
+use App\Actions\Rkat\RkatBidangAction;
+use App\Models\RkatTahapBidang;
 use App\Models\RkatVersion;
 
 /** FR-R-08: sumber baris tunggal untuk ekspor Excel dan PDF. */
@@ -57,6 +59,54 @@ final class BarisLampiran
         ];
 
         return ['bagian' => $bagian, 'catatan' => $catatan];
+    }
+
+    /**
+     * Konsolidasi rincian kegiatan 3 bidang (Pengumpulan, Pendis & Pendag, SAU) untuk layar PKP & ekspor.
+     *
+     * @return list<array{bidang_kode: string, bidang_label: string, subtotal: int, baris: list<array<string, mixed>>}>
+     */
+    public static function kegiatanGabungan(RkatVersion $versi): array
+    {
+        if (! $versi->isKolaboratif()) {
+            return [];
+        }
+
+        $kegiatan = $versi->kegiatanRencana()
+            ->aktif()
+            ->with(['posAnggaran:id,kode,nama', 'posProgram:id,kode,nama', 'jenisKegiatan:id,kode,nama'])
+            ->orderBy('id')
+            ->get()
+            ->groupBy('bidang_kode');
+
+        $hasil = [];
+        foreach (RkatTahapBidang::BIDANG as $kodeBidang) {
+            $items = $kegiatan->get($kodeBidang, collect());
+            $hasil[] = [
+                'bidang_kode' => $kodeBidang,
+                'bidang_label' => RkatBidangAction::LABEL_BIDANG[$kodeBidang] ?? $kodeBidang,
+                'subtotal' => (int) $items->sum('total'),
+                'baris' => $items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'bidang_kode' => $kodeBidang,
+                    'bidang_label' => RkatBidangAction::LABEL_BIDANG[$kodeBidang] ?? $kodeBidang,
+                    'pos_kode' => $item->posAnggaran?->kode ?? '—',
+                    'pos_nama' => $item->posAnggaran?->nama ?? '—',
+                    'program_kode' => $item->posProgram?->kode,
+                    'program_nama' => $item->posProgram?->nama,
+                    'jenis_nama' => $item->jenisKegiatan?->nama ?? $item->nama_kegiatan,
+                    'nama_kegiatan' => $item->nama_kegiatan,
+                    'jumlah' => (int) $item->jumlah,
+                    'satuan' => $item->satuan,
+                    'frekuensi' => (int) $item->frekuensi,
+                    'besaran' => (int) $item->besaran,
+                    'total' => (int) $item->total,
+                    'keterangan' => $item->keterangan,
+                ])->values()->all(),
+            ];
+        }
+
+        return $hasil;
     }
 
     /** @return list<string> */

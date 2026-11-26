@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RkatBidangController;
 use App\Http\Controllers\Umum\ArsipSuratController;
 use App\Http\Controllers\Umum\SuratKeluarController;
 use App\Http\Controllers\Umum\SuratMasukController;
@@ -11,6 +12,16 @@ Route::middleware(['auth', 'bidang:umum,view'])
     ->prefix('umum')
     ->name('umum.')
     ->group(function () {
+        Route::prefix('rkat')->name('rkat.')->group(function () {
+            Route::get('/', [RkatBidangController::class, 'index'])->name('index')->defaults('bidang', 'umum');
+            Route::middleware('peran:kabag_sau,admin')->group(function () {
+                Route::post('jenis-kegiatan', [RkatBidangController::class, 'simpanJenisKegiatan'])->name('jenis-kegiatan')->defaults('bidang', 'umum');
+                Route::post('kegiatan', [RkatBidangController::class, 'simpanKegiatan'])->name('kegiatan')->defaults('bidang', 'umum');
+                Route::post('pelengkap', [RkatBidangController::class, 'simpanPelengkap'])->name('pelengkap')->defaults('bidang', 'umum');
+                Route::post('{versi}/ajukan', [RkatBidangController::class, 'ajukan'])->name('ajukan')->defaults('bidang', 'umum');
+            });
+        });
+
         Route::get('upz', [UpzController::class, 'index'])->name('upz.index');
         Route::post('upz', [UpzController::class, 'store'])
             ->middleware('bidang:umum,create')

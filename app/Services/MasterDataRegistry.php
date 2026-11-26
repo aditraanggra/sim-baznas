@@ -11,6 +11,7 @@ use App\Models\JenisDana;
 use App\Models\JenisDokumen;
 use App\Models\JenisSurat;
 use App\Models\JenisUpz;
+use App\Models\KategoriDokumen;
 use App\Models\Kecamatan;
 use App\Models\MetodeBayar;
 use App\Models\Program;
@@ -260,6 +261,22 @@ class MasterDataRegistry
                     'nama' => ['required', 'string', 'max:128'],
                     'format_nomor' => ['nullable', 'string', 'max:128'],
                     'pisah_urutan' => ['boolean'],
+                ],
+            ],
+            'kategori_dokumen' => [
+                'label' => 'Kategori Dokumen PKP',
+                'deskripsi' => 'Kategori arsip resmi BAZNAS (RKAT, RENJA, RENSTRA, Laporan Kinerja, Laporan Keuangan, SOP).',
+                'model' => KategoriDokumen::class,
+                'urutan_default' => 'urutan',
+                'kolom' => [
+                    ['key' => 'kode', 'label' => 'Kode', 'type' => 'text', 'required' => true, 'max' => 32],
+                    ['key' => 'nama', 'label' => 'Nama Kategori', 'type' => 'text', 'required' => true, 'max' => 128],
+                    ['key' => 'urutan', 'label' => 'Urutan', 'type' => 'number', 'required' => true],
+                ],
+                'aturan' => fn (?int $id) => [
+                    'kode' => ['required', 'string', 'max:32', Rule::unique('kategori_dokumen', 'kode')->ignore($id)],
+                    'nama' => ['required', 'string', 'max:128', Rule::unique('kategori_dokumen', 'nama')->ignore($id)],
+                    'urutan' => ['required', 'integer', 'min:0', 'max:999'],
                 ],
             ],
             'desa' => [

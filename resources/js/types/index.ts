@@ -51,6 +51,15 @@ export interface SharedData {
     flash: {
         sukses?: string | null;
         peringatan?: string | null;
+        error?: string | null;
+        tautan_baru?: {
+            id: number;
+            label: string;
+            jenis: string;
+            jenis_label: string;
+            url: string;
+            kadaluarsa_at: string | null;
+        } | null;
     };
     [key: string]: unknown;
 }

@@ -2,8 +2,10 @@
 
 namespace App\Actions\Rkat;
 
+use App\Models\RkatTahapBidang;
 use App\Models\RkatVersion;
 use App\Services\Rkat\HitungRkat;
+use App\Services\Rkat\SinkronisasiNilaiRkatService;
 use App\Services\Rkat\ValidasiRkat;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +25,19 @@ class AjukanRkat extends RkatAction
             $versi = $this->versiTerkunci($data['rkat_version_id']);
             if ($versi->status !== 'draft') {
                 $this->gagal('versi', "Hanya versi Draft yang dapat diajukan (status saat ini: {$versi->status}).");
+            }
+
+            if ($versi->isKolaboratif()) {
+                $terverifikasi = $versi->tahapBidang()
+                    ->whereIn('bidang_kode', RkatTahapBidang::BIDANG)
+                    ->where('status', RkatTahapBidang::STATUS_TERVERIFIKASI)
+                    ->count();
+
+                if ($terverifikasi < count(RkatTahapBidang::BIDANG)) {
+                    $this->gagal('tahap', 'Semua tahap bidang (Pengumpulan, Pendistribusian & Pendayagunaan, SAU) harus diverifikasi oleh Kepala Bagian PKP terlebih dahulu.');
+                }
+
+                SinkronisasiNilaiRkatService::sinkronkan($versi);
             }
 
             $validasi = self::evaluasiVersi($versi);

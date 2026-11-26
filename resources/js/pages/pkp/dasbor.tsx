@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { formatAngka, formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { BookOpen, Building2, Calendar, Coins, FileSpreadsheet, FolderTree, HandHeart, Scale } from 'lucide-react';
+import { BookOpen, Building2, Calendar, Coins, FileDown, FileSpreadsheet, FolderTree, HandHeart, Scale } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Perencanaan, Keuangan & Pelaporan', href: '/pkp' }];
@@ -198,6 +198,13 @@ export default function DasborPkp({
                                     <BookOpen className="mr-1.5 size-4" aria-hidden="true" />
                                     <span>RKAT</span>
                                 </Link>
+                            </Button>
+
+                            <Button asChild variant="outline" className="h-9">
+                                <a href={route('pkp.kinerja.pdf', { tahun: tahun_terpilih })} target="_blank" rel="noopener noreferrer">
+                                    <FileDown className="mr-1.5 size-4" aria-hidden="true" />
+                                    <span>PDF Kinerja</span>
+                                </a>
                             </Button>
 
                             <Button asChild className="h-9 gap-1.5">

@@ -4,6 +4,7 @@ use App\Http\Controllers\Pengaturan\ImporController;
 use App\Http\Controllers\Pengaturan\MasterDataController;
 use App\Http\Controllers\Pengaturan\PenggunaController;
 use App\Http\Controllers\Pengaturan\PosAnggaranController;
+use App\Http\Controllers\Pengaturan\TautanAksesController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'peran:admin'])->prefix('pengaturan')->name('pengaturan.')->group(function () {
@@ -25,4 +26,9 @@ Route::middleware(['auth', 'peran:admin'])->prefix('pengaturan')->name('pengatur
     Route::get('impor/{job}', [ImporController::class, 'hasil'])->name('impor.hasil');
 
     Route::get('audit', [ImporController::class, 'audit'])->name('audit');
+
+    Route::get('tautan-akses', [TautanAksesController::class, 'index'])->name('tautan-akses');
+    Route::post('tautan-akses', [TautanAksesController::class, 'buat'])->name('tautan-akses.buat');
+    Route::post('tautan-akses/{tautan}/cabut', [TautanAksesController::class, 'cabut'])->name('tautan-akses.cabut');
+    Route::post('tautan-akses/{tautan}/putar', [TautanAksesController::class, 'putar'])->name('tautan-akses.putar');
 });

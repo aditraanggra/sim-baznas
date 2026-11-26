@@ -21,6 +21,7 @@ Sumber: `docs/PRD.md` (v0.1, 14 Nov 2026), dibandingkan dengan kode per commit `
 | K13 | Master Wilayah Kabupaten Cianjur bersumber dari `docs/Daerah Kabupaten Cianjur.csv` (360 desa, kecamatan lengkap di Kab. Cianjur). | F0-09 seed wilayah. |
 | K14 | Master Dana, Asnaf, dan Program bersumber dari `docs/Jenis Dana_Sumber Dana_Asnaf_Program.md`: <br>• **Jenis Dana (4):** Zakat, Infak, DSKL, CSR. <br>• **Sumber Dana (9):** Zakat Fitrah (`ZF`), Zakat Mal (`ZM`), Infak Sedekah Tidak Terikat (`IFTT`), Infak Sedekah Terikat (`IFT`), Fidyah (`FDY`), Kurban (`KRB`), Kotak Amal (`KA`), Kafarat (`KFT`), CSR (`CSR`). <br>• **Asnaf (8, khusus Zakat):** Fakir, Miskin, Amil, Mualaf, Riqob, Ibnu Sabil, Gharimin, Fisabilillah. <br>• **Program Bidang Pendistribusian:** Kemanusiaan, Kesehatan, Pendidikan, Dakwah-Advokasi. <br>• **Program Bidang Pendayagunaan:** Ekonomi, Kesehatan, Pendidikan. | F0-10, PDP-T08 (validasi asnaf Zakat & penugasan staf pendis vs pendag). |
 | K15 | Penomoran dokumen dibuat **berbasis template konfigurasi** (`config/penomoran.php` dengan token seperti `{jenis}`, `{urut:4}`, `{romawi_bulan}`, `{tahun}`) di atas tabel `nomor_sequence` dengan row-locking. Format baku diabaikan sementara; ketika format resmi telah ditetapkan, format dapat diubah hanya dari 1 baris config tanpa mengubah kode action atau struktur database. | F0-13, ADM-T01, UMM-T01. |
+| K17 | **Alur Penyusunan RKAT Kolaboratif 3 Bidang (`docs/Alur penyusunan RKAT BAZNAS Kabupaten Cianjur.md`, 26 Nov 2026):** PKP menetapkan 1 target pengumpulan Neraca (L2) RAKORNAS & menyesuaikan 22 baris aturan Hak Amil (`<= maks`); Bidang Pengumpulan, Pendis/Pendag (7 Kelompok Dana + L4 + L5/2), dan SAU (Hak Amil + Hibah/Saldo Awal -> L7) menyusun rincian kegiatan (`rkat_jenis_kegiatan` & `rkat_kegiatan_rencana`) dan pos pelengkap di modul masing-masing, lalu diverifikasi Kabag PKP (revisi Pengumpulan me-reset status Pendis/SAU ke menunggu tanpa menghapus data). PKP menggabungkan otomatis ke L2–L7 (100% read-only pada versi kolaboratif) dan menambah 9 pos L2 baru (`L2/2.8..2.13`, `L2/3.2`, `L2/5.3`, `L2/5.4`) tanpa merusak data historis 2022–2026 (`mode_penyusunan = 'manual'`). | `PosAnggaranAlurBaruSeeder`, `AlokasiRkatService`, `SinkronisasiNilaiRkatService`, menu `Perencanaan RKAT` per bidang. |
 
 ### 1.1 Daftar peran (K7)
 
@@ -228,10 +229,10 @@ Prioritas: **P-A** jalur kritis, **P-B** wajib sebelum go-live fase, **P-C** bol
 | KEU-T04 | Cash opname per pecahan + berita acara | M | Claude Sonnet |
 | KEU-T05 | Template jurnal + jurnal otomatis dari transaksi + jurnal manual + posting + kunci periode + jurnal balik | XL | Claude Opus |
 | KEU-T06 | Laporan PSAK 109 (posisi keuangan, perubahan dana, arus kas, CaLK) | XL | Claude Opus |
-| ARS-T01 | `kategori_dokumen`, `dokumen_arsip`, unggah dokumen disahkan | M | Claude Sonnet |
-| ARS-T02 | `tautan_akses` (token hash, cabut, kedaluwarsa, noindex, log akses) | L | Claude Opus |
-| ARS-T03 | Portal arsip gaya PPID + `akses_dokumen_log` | M-UI | Gemini Pro |
-| LKP-T01 | Dasbor kinerja publik via tautan khusus (agregat saja) | M-UI | Gemini Pro |
+| ARS-T01 | `kategori_dokumen`, `dokumen_arsip`, unggah dokumen disahkan — **Selesai (25 Nov)** | M | Claude Sonnet |
+| ARS-T02 | `tautan_akses` (token hash, cabut, kedaluwarsa, noindex, log akses) — **Selesai (25 Nov)** | L | Claude Opus |
+| ARS-T03 | Portal arsip gaya PPID + `akses_dokumen_log` — **Selesai (25 Nov)** | M-UI | Gemini Pro |
+| LKP-T01 | Dasbor kinerja publik via tautan khusus (agregat saja) + Beranda Layanan Publik (`/publik`) — **Selesai (25 Nov)** | M-UI | Gemini Pro |
 
 ## 8. Fase 3: SDM (bukan MVP)
 

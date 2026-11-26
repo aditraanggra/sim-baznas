@@ -19,10 +19,16 @@ class RkatExport implements Export, WithMultipleSheets
         $data = BarisLampiran::untuk($this->versi);
         $akhir = array_key_last($data['bagian']);
 
-        return array_map(
+        $sheets = array_map(
             fn (array $bagian, int $i) => new RkatLampiranSheet($bagian, $i === $akhir ? $data['catatan'] : []),
             $data['bagian'],
             array_keys($data['bagian']),
         );
+
+        if ($this->versi->isKolaboratif()) {
+            $sheets[] = new RkatKegiatanGabunganSheet($this->versi, BarisLampiran::kegiatanGabungan($this->versi));
+        }
+
+        return $sheets;
     }
 }

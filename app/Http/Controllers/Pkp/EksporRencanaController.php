@@ -20,7 +20,11 @@ class EksporRencanaController extends Controller
 
     public function pdf(RkatVersion $versi): Response
     {
-        return Pdf::loadView('pdf.rkat', ['versi' => $versi, ...BarisLampiran::untuk($versi)])
+        return Pdf::loadView('pdf.rkat', [
+            'versi' => $versi,
+            ...BarisLampiran::untuk($versi),
+            'kegiatan_gabungan' => $versi->isKolaboratif() ? BarisLampiran::kegiatanGabungan($versi) : [],
+        ])
             ->setPaper('a4')
             ->setOption(['defaultFont' => 'DejaVu Sans'])
             ->download($this->nama($versi, 'pdf'));

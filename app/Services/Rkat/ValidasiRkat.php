@@ -8,8 +8,8 @@ namespace App\Services\Rkat;
  */
 final class ValidasiRkat
 {
-    /** Kode baku "untuk Amil" di L3: zakat, infak tidak terikat, infak terikat, CSR, DSKL. Kurban/Fidyah dikecualikan (open-questions). */
-    public const AMIL_L3 = ['L3/1.3', 'L3/2.2', 'L3/3.2', 'L3/4.2', 'L3/8.2'];
+    /** Kode baku "untuk Amil" di L3: zakat, infak tidak terikat, infak terikat, CSR, Kurban, Fidyah, DSKL. */
+    public const AMIL_L3 = ['L3/1.3', 'L3/2.2', 'L3/3.2', 'L3/4.2', 'L3/6.2', 'L3/7.2', 'L3/8.2'];
 
     public const AMIL_L6 = ['L6/1.1', 'L6/1.2', 'L6/1.3', 'L6/1.4'];
 
@@ -19,12 +19,12 @@ final class ValidasiRkat
 
     public const ORANG_MUZAKKI = ['L5/1.1', 'L5/1.3', 'L5/1.4', 'L5/1.5'];
 
-    /** jenis dana => [penerimaan L2, kode amil L3] */
+    /** jenis dana => [daftar kode penerimaan L2, kode amil L3] */
     public const JENIS_DANA = [
-        'zakat' => ['L2/1', ['L3/1.3']],
-        'infak' => ['L2/2', ['L3/2.2', 'L3/3.2']],
-        'csr' => ['L2/3', ['L3/4.2']],
-        'dskl' => ['L2/5', ['L3/8.2']],
+        'zakat' => [['L2/1'], ['L3/1.3']],
+        'infak' => [['L2/2'], ['L3/2.2', 'L3/3.2']],
+        'csr' => [['L2/3'], ['L3/4.2']],
+        'dskl' => [['L2/4', 'L2/5'], ['L3/6.2', 'L3/7.2', 'L3/8.2']],
     ];
 
     /**
@@ -69,7 +69,7 @@ final class ValidasiRkat
 
         $rincian6 = [];
         foreach (self::JENIS_DANA as $jenis => [$kodeTerima, $kodeAmil]) {
-            $terima = $n[$kodeTerima] ?? 0;
+            $terima = $s((array) $kodeTerima);
             $amil = $s($kodeAmil);
             $batas = $batasBp[$jenis] ?? null;
             // Bilangan bulat: amil/terima <= batas/10000. Batas 0: setiap amil > 0 gagal (temuan 10).

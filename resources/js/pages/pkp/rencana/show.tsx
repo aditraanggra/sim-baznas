@@ -1,3 +1,10 @@
+import { PanelTargetDanAturanAmil, PanelVerifikasiBidang, TabKonsolidasiKegiatan } from '@/components/rkat/PanelKolaboratifPkp';
+import {
+    type AturanAmilItem,
+    type KelompokKegiatanGabungan,
+    type RingkasanAlokasi,
+    type TahapBidangDetail,
+} from '@/components/rkat/types';
 import AppLayout from '@/layouts/app-layout';
 import { formatAngka, formatRupiah } from '@/lib/format';
 import { type BreadcrumbItem, type SharedData } from '@/types';
@@ -12,6 +19,8 @@ interface Versi {
     label: string;
     status: string;
     sumber: string;
+    mode_penyusunan?: string;
+    target_pengumpulan?: number | null;
     arsip: boolean;
     nomor_surat: string | null;
     tanggal_surat: string | null;
@@ -89,6 +98,13 @@ interface Riwayat {
     disahkan_pada: string | null;
 }
 
+interface KolaboratifData {
+    ringkasan: RingkasanAlokasi;
+    tahap_bidang: TahapBidangDetail[];
+    aturan_amil: AturanAmilItem[];
+    kegiatan_gabungan: KelompokKegiatanGabungan[];
+}
+
 interface Props {
     versi: Versi;
     pos: Pos[];
@@ -98,6 +114,8 @@ interface Props {
     dokumen: Dokumen[];
     riwayat: Riwayat[];
     dapat_tulis: boolean;
+    dapat_verifikasi?: boolean;
+    kolaboratif?: KolaboratifData | null;
 }
 
 const STATUS: Record<string, { teks: string; ikon: LucideIcon }> = {
@@ -139,12 +157,19 @@ function Lencana({ status }: { status: string }) {
 }
 
 export default function Show(props: Props) {
-    const { versi, pos, tak_terpetakan, validasi, catatan, dokumen, riwayat, dapat_tulis } = props;
+    const { versi, pos, tak_terpetakan, validasi, catatan, dokumen, riwayat, dapat_tulis, dapat_verifikasi = false, kolaboratif = null } = props;
     const { errors, flash } = usePage<SharedData & { errors: Record<string, string> }>().props;
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Rencana (RKAT)', href: '/pkp/rencana' },
         { title: `${versi.tahun} · ${versi.label}`, href: '#' },
     ];
+    const isKolaboratif = versi.mode_penyusunan === 'kolaboratif' && kolaboratif !== null;
+    const semuaBidangTerverifikasi = isKolaboratif
+        ? kolaboratif.tahap_bidang.every((t) => t.status === 'terverifikasi')
+        : true;
+    const pengumpulanTerverifikasi = isKolaboratif
+        ? kolaboratif.tahap_bidang.some((t) => t.bidang_kode === 'pengumpulan' && t.status === 'terverifikasi')
+        : false;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -163,13 +188,32 @@ export default function Show(props: Props) {
 
                 <Header versi={versi} />
                 {tak_terpetakan.length > 0 && <PeringatanTakTerpetakan daftar={tak_terpetakan} />}
-                <Grid versi={versi} pos={pos} dapat_tulis={dapat_tulis} />
+                {isKolaboratif && (
+                    <>
+                        <PanelVerifikasiBidang
+                            versiId={versi.id}
+                            versiTerkunci={versi.terkunci}
+                            tahapBidang={kolaboratif.tahap_bidang}
+                            ringkasan={kolaboratif.ringkasan}
+                            dapatVerifikasi={dapat_verifikasi}
+                        />
+                        <PanelTargetDanAturanAmil
+                            versiId={versi.id}
+                            versiTerkunci={versi.terkunci}
+                            targetPengumpulan={versi.target_pengumpulan ?? null}
+                            aturanAmil={kolaboratif.aturan_amil}
+                            pengumpulanTerverifikasi={pengumpulanTerverifikasi}
+                            dapatTulis={dapat_tulis}
+                        />
+                    </>
+                )}
+                <Grid versi={versi} pos={pos} dapat_tulis={dapat_tulis} kolaboratif={kolaboratif} />
                 <div className="grid gap-4 lg:grid-cols-2">
                     <DaftarValidasi validasi={validasi} sumber={versi.sumber} />
-                    {dapat_tulis && <PanelStatus versi={versi} />}
+                    {dapat_tulis && <PanelStatus versi={versi} siapAjukanKolaboratif={semuaBidangTerverifikasi} />}
                 </div>
                 <div className="grid gap-4 lg:grid-cols-2">
-                    <FormCatatan versi={versi} catatan={catatan} bisaUbah={dapat_tulis && !versi.terkunci} />
+                    <FormCatatan versi={versi} catatan={catatan} bisaUbah={dapat_tulis && !versi.terkunci} isKolaboratif={isKolaboratif} />
                     <PanelDokumen versi={versi} dokumen={dokumen} dapat_tulis={dapat_tulis} />
                 </div>
                 <Riwayat riwayat={riwayat} aktifId={versi.id} />
@@ -185,6 +229,11 @@ function Header({ versi }: { versi: Versi }) {
                 RKAT {versi.tahun} · {versi.label}
             </h1>
             <Lencana status={versi.status} />
+            {versi.mode_penyusunan === 'kolaboratif' && (
+                <span className="bg-primary-soft text-primary rounded-full px-2.5 py-0.5 text-xs font-medium">
+                    Kolaboratif 3 Bidang (Read-Only)
+                </span>
+            )}
             <span className="text-muted-foreground text-sm">Sumber: {versi.sumber === 'impor' ? 'Impor' : 'Manual'}</span>
             {versi.arsip && <span className="text-sm">Diarsipkan</span>}
             {versi.nomor_surat && (
@@ -229,8 +278,19 @@ function PeringatanTakTerpetakan({ daftar }: { daftar: TakTerpetakan[] }) {
     );
 }
 
-function Grid({ versi, pos, dapat_tulis }: { versi: Versi; pos: Pos[]; dapat_tulis: boolean }) {
-    const [tab, setTab] = useState('L2');
+function Grid({
+    versi,
+    pos,
+    dapat_tulis,
+    kolaboratif,
+}: {
+    versi: Versi;
+    pos: Pos[];
+    dapat_tulis: boolean;
+    kolaboratif: KolaboratifData | null;
+}) {
+    const isKolaboratif = versi.mode_penyusunan === 'kolaboratif' && kolaboratif !== null;
+    const [tab, setTab] = useState(isKolaboratif ? 'KEGIATAN' : 'L2');
     const [tutup, setTutup] = useState<Set<number>>(new Set());
     const [draft, setDraft] = useState<Record<number, string>>({});
     const [menyimpan, setMenyimpan] = useState(false);
@@ -296,6 +356,16 @@ function Grid({ versi, pos, dapat_tulis }: { versi: Versi; pos: Pos[]; dapat_tul
     return (
         <section className="rounded-xl border">
             <div className="flex flex-wrap items-center gap-2 border-b p-2" role="tablist">
+                {isKolaboratif && (
+                    <button
+                        role="tab"
+                        aria-selected={tab === 'KEGIATAN'}
+                        onClick={() => setTab('KEGIATAN')}
+                        className={`rounded-md px-3 py-1.5 text-sm ${tab === 'KEGIATAN' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                    >
+                        Konsolidasi Kegiatan (3 Bidang)
+                    </button>
+                )}
                 {LAMPIRAN.map((l) => (
                     <button
                         key={l}
@@ -311,6 +381,10 @@ function Grid({ versi, pos, dapat_tulis }: { versi: Versi; pos: Pos[]; dapat_tul
                     {versi.terkunci ? (
                         <span className="inline-flex items-center gap-1">
                             <Lock className="size-4" aria-hidden /> Terkunci (BR-02)
+                        </span>
+                    ) : isKolaboratif ? (
+                        <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+                            <Lock className="size-3.5" aria-hidden /> Konsolidasi Otomatis (Read-Only)
                         </span>
                     ) : !dapat_tulis ? (
                         <span>Hanya lihat</span>
@@ -329,6 +403,9 @@ function Grid({ versi, pos, dapat_tulis }: { versi: Versi; pos: Pos[]; dapat_tul
                 </span>
             </div>
 
+            {tab === 'KEGIATAN' && isKolaboratif ? (
+                <TabKonsolidasiKegiatan kelompokBidang={kolaboratif.kegiatan_gabungan} />
+            ) : (
             <div className="max-h-[70vh] overflow-auto">
                 <table className="w-full text-sm">
                     <thead className="bg-muted sticky top-0 z-10 text-left">
@@ -418,6 +495,7 @@ function Grid({ versi, pos, dapat_tulis }: { versi: Versi; pos: Pos[]; dapat_tul
                     </tbody>
                 </table>
             </div>
+            )}
         </section>
     );
 }
@@ -506,7 +584,7 @@ function RincianVal({ v }: { v: Validasi }) {
     );
 }
 
-function PanelStatus({ versi }: { versi: Versi }) {
+function PanelStatus({ versi, siapAjukanKolaboratif = true }: { versi: Versi; siapAjukanKolaboratif?: boolean }) {
     const [nomor, setNomor] = useState('');
     const [tanggal, setTanggal] = useState('');
     const [alasan, setAlasan] = useState('');
@@ -523,7 +601,8 @@ function PanelStatus({ versi }: { versi: Versi }) {
                 {versi.status === 'draft' && (
                     <>
                         <button
-                            className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm"
+                            className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 text-sm disabled:opacity-50"
+                            disabled={!siapAjukanKolaboratif}
                             onClick={() => kirim('pkp.rencana.ajukan')}
                         >
                             Ajukan
@@ -531,6 +610,11 @@ function PanelStatus({ versi }: { versi: Versi }) {
                         <button className={tombol} onClick={() => kirim('pkp.rencana.arsip', {}, 'Arsipkan versi ini?')}>
                             Arsipkan
                         </button>
+                        {!siapAjukanKolaboratif && (
+                            <p className="text-muted-foreground w-full text-xs">
+                                Menunggu ketiga bidang (Pengumpulan, Pendis/Pendag, SAU) diverifikasi oleh Kepala Bagian PKP.
+                            </p>
+                        )}
                     </>
                 )}
                 {versi.status === 'diajukan' && (
@@ -589,7 +673,18 @@ function PanelStatus({ versi }: { versi: Versi }) {
 type CatatanForm = Record<'zakat' | 'infak' | 'csr' | 'dskl', string> &
     Record<'target_orang' | 'target_pengentasan_ekstrem' | 'target_pengentasan_garis' | 'catatan', string>;
 
-function FormCatatan({ versi, catatan, bisaUbah }: { versi: Versi; catatan: Catatan | null; bisaUbah: boolean }) {
+function FormCatatan({
+    versi,
+    catatan,
+    bisaUbah,
+    isKolaboratif = false,
+}: {
+    versi: Versi;
+    catatan: Catatan | null;
+    bisaUbah: boolean;
+    isKolaboratif?: boolean;
+}) {
+    const bisaUbahAngka = bisaUbah && !isKolaboratif;
     const awal: CatatanForm = {
         zakat: bpKePersen(catatan?.batas_amil_zakat_bp ?? null),
         infak: bpKePersen(catatan?.batas_amil_infak_bp ?? null),
@@ -625,11 +720,16 @@ function FormCatatan({ versi, catatan, bisaUbah }: { versi: Versi; catatan: Cata
     return (
         <section className="rounded-xl border p-4">
             <h2 className="mb-3 font-semibold">Catatan pengesahan</h2>
+            {isKolaboratif && (
+                <p className="text-muted-foreground mb-3 text-xs">
+                    Batas hak amil dan target mustahik disinkronkan otomatis dari aturan 22 baris dan rincian bidang.
+                </p>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
                 {(['zakat', 'infak', 'csr', 'dskl'] as const).map((k) => (
                     <label key={k} className="grid gap-1 text-sm">
                         Batas hak amil {JENIS_DANA[k]} (%)
-                        <input className={kolom} inputMode="decimal" disabled={!bisaUbah} value={f[k]} onChange={(e) => set(k, e.target.value)} />
+                        <input className={kolom} inputMode="decimal" disabled={!bisaUbahAngka} value={f[k]} onChange={(e) => set(k, e.target.value)} />
                     </label>
                 ))}
                 <label className="grid gap-1 text-sm">
@@ -637,7 +737,7 @@ function FormCatatan({ versi, catatan, bisaUbah }: { versi: Versi; catatan: Cata
                     <input
                         className={kolom}
                         inputMode="numeric"
-                        disabled={!bisaUbah}
+                        disabled={!bisaUbahAngka}
                         value={f.target_orang}
                         onChange={(e) => set('target_orang', e.target.value)}
                     />
@@ -647,7 +747,7 @@ function FormCatatan({ versi, catatan, bisaUbah }: { versi: Versi; catatan: Cata
                     <input
                         className={kolom}
                         inputMode="numeric"
-                        disabled={!bisaUbah}
+                        disabled={!bisaUbahAngka}
                         value={f.target_pengentasan_ekstrem}
                         onChange={(e) => set('target_pengentasan_ekstrem', e.target.value)}
                     />
@@ -657,7 +757,7 @@ function FormCatatan({ versi, catatan, bisaUbah }: { versi: Versi; catatan: Cata
                     <input
                         className={kolom}
                         inputMode="numeric"
-                        disabled={!bisaUbah}
+                        disabled={!bisaUbahAngka}
                         value={f.target_pengentasan_garis}
                         onChange={(e) => set('target_pengentasan_garis', e.target.value)}
                     />

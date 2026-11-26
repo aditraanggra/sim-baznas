@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
@@ -146,9 +146,15 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         </Button>
                     </form>
 
-                    <p className="text-muted-foreground mt-6 border-t pt-4 text-center text-xs">
-                        Akun amil dan pengurus UPZ diterbitkan oleh Administrator Sistem.
-                    </p>
+                    <div className="text-muted-foreground mt-6 space-y-2 border-t pt-4 text-center text-xs">
+                        <p>Akun amil dan pengurus UPZ diterbitkan oleh Administrator Sistem.</p>
+                        <p>
+                            Lacak permohonan atau cek SK UPZ?{' '}
+                            <Link href={route('publik.index')} className="text-brand font-medium hover:underline">
+                                Buka Portal Layanan Publik
+                            </Link>
+                        </p>
+                    </div>
                 </div>
             </main>
         </div>

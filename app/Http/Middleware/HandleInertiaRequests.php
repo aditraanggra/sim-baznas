@@ -66,6 +66,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'muzakki_baru_id' => fn () => $request->session()->get('muzakki_baru_id'),
                 'mustahik_baru_id' => fn () => $request->session()->get('mustahik_baru_id'),
+                'tautan_baru' => fn () => $request->session()->get('tautan_baru'),
             ],
         ]);
     }

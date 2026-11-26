@@ -13,6 +13,7 @@ import {
     Gauge,
     HandHeart,
     Inbox,
+    KeyRound,
     LayoutGrid,
     Mail,
     PlusCircle,
@@ -38,6 +39,7 @@ export const navPerBidang: Record<string, NavGroup[]> = {
             title: 'Pengumpulan ZIS',
             items: [
                 { title: 'Dasbor Pengumpulan', url: '/pengumpulan', icon: LayoutGrid },
+                { title: 'Perencanaan RKAT', url: '/pengumpulan/rkat', icon: BookOpen },
                 { title: 'Input Penerimaan', url: '/pengumpulan/penerimaan/buat', icon: PlusCircle },
                 { title: 'Daftar Penerimaan', url: '/pengumpulan/penerimaan', icon: Receipt },
                 { title: 'Data Muzakki', url: '/pengumpulan/muzakki', icon: Users },
@@ -51,6 +53,7 @@ export const navPerBidang: Record<string, NavGroup[]> = {
             title: 'Pendistribusian & Pendayagunaan',
             items: [
                 { title: 'Dasbor Pendistribusian', url: '/distribusi', icon: LayoutGrid },
+                { title: 'Perencanaan RKAT', url: '/distribusi/rkat', icon: BookOpen },
                 { title: 'Disposisi Saya', url: '/distribusi/disposisi-saya', icon: Inbox },
                 { title: 'Data Mustahik', url: '/distribusi/mustahik', icon: Users },
                 { title: 'Permohonan Bantuan', url: '/distribusi/permohonan', icon: CheckSquare },
@@ -65,6 +68,7 @@ export const navPerBidang: Record<string, NavGroup[]> = {
             title: 'Umum & UPZ',
             items: [
                 { title: 'Dasbor Bidang Umum', url: '/umum', icon: Building2 },
+                { title: 'Perencanaan RKAT', url: '/umum/rkat', icon: BookOpen },
                 { title: 'Data UPZ & SK UPZ', url: '/umum/upz', icon: ShieldCheck },
             ],
         },
@@ -87,6 +91,7 @@ export const navPerBidang: Record<string, NavGroup[]> = {
                 { title: 'RKAT', url: '/pkp/rencana', icon: BookOpen },
                 { title: 'RKAT vs Realisasi', url: '/pkp/realisasi', icon: FileSpreadsheet },
                 { title: 'Kinerja', url: '/pkp/kinerja', icon: Gauge },
+                { title: 'Arsip Dokumen PKP', url: '/pkp/arsip', icon: Archive },
                 { title: 'Laporan Setoran UPZ', url: '/pkp/laporan-setoran-upz', icon: Coins },
             ],
         },
@@ -106,6 +111,7 @@ export const navPengaturan: NavGroup = {
         { title: 'Master Data', url: '/pengaturan/master-data', icon: Database },
         { title: 'Pos Anggaran', url: '/pengaturan/pos-anggaran', icon: FolderTree },
         { title: 'Impor Data', url: '/pengaturan/impor', icon: ScrollText },
+        { title: 'Tautan Akses', url: '/pengaturan/tautan-akses', icon: KeyRound },
         { title: 'Audit Log', url: '/pengaturan/audit', icon: ScrollText },
     ],
 };

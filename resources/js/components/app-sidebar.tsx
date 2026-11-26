@@ -23,7 +23,11 @@ export function AppSidebar() {
             .filter((g) => !(adalahUpzEksternal && g.title === 'Administrasi & Persuratan'))
             .map((g) => ({
                 ...g,
-                items: g.items.filter((item) => !(item.url === '/umum/surat/template' && !bolehLihatTemplate)),
+                items: g.items.filter(
+                    (item) =>
+                        !(item.url === '/umum/surat/template' && !bolehLihatTemplate) &&
+                        !(item.url === '/umum/rkat' && adalahUpzEksternal),
+                ),
             }));
     }
 

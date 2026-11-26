@@ -32,7 +32,11 @@ class SimpanCatatanRkat extends RkatAction
             $note = RkatNote::firstOrNew(['rkat_version_id' => $versi->id]);
             $lama = $note->exists ? $note->only(RkatNote::KOLOM) : null;
 
-            $note->fill(array_intersect_key($data, array_flip(RkatNote::KOLOM)))->save();
+            $nilaiBaru = $versi->isKolaboratif()
+                ? ['catatan' => $data['catatan'] ?? null]
+                : array_intersect_key($data, array_flip(RkatNote::KOLOM));
+
+            $note->fill($nilaiBaru)->save();
 
             $this->catatAudit('ubah_catatan', RkatVersion::class, $versi->id, $lama, $note->only(RkatNote::KOLOM));
 

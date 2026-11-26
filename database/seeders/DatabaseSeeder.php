@@ -16,9 +16,11 @@ class DatabaseSeeder extends Seeder
             MasterOperasionalSeeder::class,
             JenisUpzSeeder::class,
             PosAnggaranSeeder::class,
+            PosAnggaranAlurBaruSeeder::class,
             RkatSeeder::class,
             PerencanaanJembatanSeeder::class,
             AdministrasiSeeder::class,
+            KategoriDokumenSeeder::class,
         ]);
     }
 }

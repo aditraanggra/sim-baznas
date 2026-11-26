@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Pkp\ArsipDokumenController;
 use App\Http\Controllers\Pkp\DasborPkpController;
 use App\Http\Controllers\Pkp\PemetaanKegiatanController;
 use App\Http\Controllers\Pkp\RealisasiController;
@@ -9,7 +10,24 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'bidang:pkp,view'])->prefix('pkp')->name('pkp.')->group(function () {
     Route::get('/', [DasborPkpController::class, 'index'])->name('index');
+    Route::get('kinerja-pdf', [DasborPkpController::class, 'unduhPdf'])
+        ->middleware('bidang:pkp,print')
+        ->name('kinerja.pdf');
     Route::get('laporan-setoran-upz', [UpzController::class, 'laporanSetoran'])->name('laporan-setoran-upz');
+
+    // Arsip Dokumen PKP (ARS-T01 / ARS-T03)
+    Route::get('arsip', [ArsipDokumenController::class, 'index'])->name('arsip.index');
+    Route::post('arsip', [ArsipDokumenController::class, 'simpan'])
+        ->middleware('bidang:pkp,create')
+        ->name('arsip.simpan');
+    Route::post('arsip/{dokumen}/sahkan', [ArsipDokumenController::class, 'sahkan'])
+        ->middleware('bidang:pkp,approve')
+        ->name('arsip.sahkan');
+    Route::post('arsip/{dokumen}/cabut', [ArsipDokumenController::class, 'cabut'])
+        ->middleware('bidang:pkp,approve')
+        ->name('arsip.cabut');
+    Route::get('arsip/{dokumen}/berkas', [ArsipDokumenController::class, 'berkas'])
+        ->name('arsip.berkas');
 
     // Tahun Anggaran
     Route::post('tahun-anggaran', [TahunAnggaranController::class, 'store'])

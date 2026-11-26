@@ -6,6 +6,7 @@ use App\Http\Controllers\Distribusi\LaporanPendistribusianController;
 use App\Http\Controllers\Distribusi\MustahikController;
 use App\Http\Controllers\Distribusi\PenyaluranController;
 use App\Http\Controllers\Distribusi\PermohonanController;
+use App\Http\Controllers\RkatBidangController;
 use Illuminate\Support\Facades\Route;
 
 // Keuangan dapat menandai kesiapan dana tanpa membutuhkan izin tulis bidang distribusi.
@@ -18,6 +19,16 @@ Route::middleware(['auth', 'bidang:distribusi,view'])
     ->name('distribusi.')
     ->group(function () {
         Route::get('/', [DasborPendistribusianController::class, 'index'])->name('index');
+
+        Route::prefix('rkat')->name('rkat.')->group(function () {
+            Route::get('/', [RkatBidangController::class, 'index'])->name('index')->defaults('bidang', 'distribusi');
+            Route::middleware('peran:kabag_pendis_pendag,admin')->group(function () {
+                Route::post('jenis-kegiatan', [RkatBidangController::class, 'simpanJenisKegiatan'])->name('jenis-kegiatan')->defaults('bidang', 'distribusi');
+                Route::post('kegiatan', [RkatBidangController::class, 'simpanKegiatan'])->name('kegiatan')->defaults('bidang', 'distribusi');
+                Route::post('pelengkap', [RkatBidangController::class, 'simpanPelengkap'])->name('pelengkap')->defaults('bidang', 'distribusi');
+                Route::post('{versi}/ajukan', [RkatBidangController::class, 'ajukan'])->name('ajukan')->defaults('bidang', 'distribusi');
+            });
+        });
         Route::get('disposisi-saya', [DasborPendistribusianController::class, 'disposisiSaya'])->name('disposisi-saya');
 
         Route::get('mustahik', [MustahikController::class, 'index'])->name('mustahik.index');

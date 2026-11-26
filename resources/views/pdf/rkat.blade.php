@@ -53,5 +53,50 @@
         @endif
     </div>
 @endforeach
+@if (! empty($kegiatan_gabungan))
+    <div class="pisah"></div>
+    <div>
+        <h1>Konsolidasi Rincian Kegiatan 3 Bidang</h1>
+        <p>RKAT {{ $versi->tahun }} - {{ $versi->label() }} - {{ ucfirst($versi->status) }}</p>
+        @foreach ($kegiatan_gabungan as $kelompok)
+            <h2 style="font-size: 10pt; margin: 10pt 0 4pt;">{{ $kelompok['bidang_label'] }}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%">Pos</th>
+                        <th>Kegiatan &amp; Uraian Pos</th>
+                        <th class="kanan" style="width: 10%">Jml</th>
+                        <th class="kanan" style="width: 7%">Frek</th>
+                        <th class="kanan" style="width: 16%">Besaran</th>
+                        <th class="kanan" style="width: 18%">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($kelompok['baris'] as $r)
+                        <tr>
+                            <td>{{ $r['pos_kode'] }}</td>
+                            <td>
+                                <strong>{{ $r['nama_kegiatan'] }}</strong><br>
+                                <span style="font-size: 7.5pt; color: #444;">{{ $r['pos_nama'] }}@if ($r['program_nama']) · Program: {{ $r['program_nama'] }}@endif</span>
+                            </td>
+                            <td class="kanan">{{ number_format($r['jumlah'], 0, ',', '.') }} {{ $r['satuan'] }}</td>
+                            <td class="kanan">{{ $r['frekuensi'] }}x</td>
+                            <td class="kanan">{{ number_format($r['besaran'], 0, ',', '.') }}</td>
+                            <td class="kanan">{{ number_format($r['total'], 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6">Belum ada rincian kegiatan.</td>
+                        </tr>
+                    @endforelse
+                    <tr class="induk">
+                        <td colspan="5">Subtotal {{ $kelompok['bidang_label'] }}</td>
+                        <td class="kanan">{{ number_format($kelompok['subtotal'], 0, ',', '.') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        @endforeach
+    </div>
+@endif
 </body>
 </html>
