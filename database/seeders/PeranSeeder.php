@@ -41,16 +41,22 @@ class PeranSeeder extends Seeder
             Role::findOrCreate($nama, 'web');
         }
 
-        // Akun awal wajib ganti sandi dan aktifkan 2FA.
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@pkp.local'],
-            [
-                'name' => 'Administrator',
-                'username' => 'admin',
-                'password' => Hash::make('password'),
-                'status' => 'aktif',
-            ],
-        );
-        $admin->syncRoles(['admin', 'amil']);
+        // Akun awal hanya dibuat jika belum ada admin; jalankan ulang seeder tidak mereset sandi.
+        if (! User::role('admin')->exists()) {
+            $email = env('ADMIN_INITIAL_EMAIL') ?: 'admin@pkp.local';
+            $username = env('ADMIN_INITIAL_USERNAME') ?: 'admin';
+            $password = env('ADMIN_INITIAL_PASSWORD') ?: 'password';
+
+            $admin = User::firstOrCreate(
+                ['email' => (string) $email],
+                [
+                    'name' => 'Administrator',
+                    'username' => (string) $username,
+                    'password' => Hash::make((string) $password),
+                    'status' => 'aktif',
+                ],
+            );
+            $admin->syncRoles(['admin', 'amil']);
+        }
     }
 }

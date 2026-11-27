@@ -3,16 +3,36 @@ name: tests
 on:
   push:
     branches:
-      - develop
-      - main
+      - master
+      - staging
+      - production
   pull_request:
     branches:
-      - develop
-      - main
+      - master
+      - staging
+      - production
+
+permissions:
+  contents: read
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: pkp_test
+          POSTGRES_USER: pkp
+          POSTGRES_PASSWORD: pkp
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U pkp -d pkp_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout
@@ -21,9 +41,9 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: '8.4'
+          extensions: pdo_pgsql, gd, zip, intl, bcmath, pcntl
           tools: composer:v2
-          coverage: xdebug
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -37,11 +57,8 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-      - name: Create SQLite Database
-        run: touch database/database.sqlite
-
       - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
       - name: Copy Environment File
         run: cp .env.example .env
@@ -49,5 +66,26 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
-      - name: Tests
-        run: ./vendor/bin/phpunit
+      - name: Run Pest Tests
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: pkp_test
+          DB_USERNAME: pkp
+          DB_PASSWORD: pkp
+        run: php vendor/bin/pest
+
+      - name: Verify Migration Rollback
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: pkp_test
+          DB_USERNAME: pkp
+          DB_PASSWORD: pkp
+        run: |
+          php artisan migrate:fresh --force
+          php artisan migrate:rollback --force

@@ -6,6 +6,7 @@ use App\Models\User;
 use Database\Seeders\PeranSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -145,4 +146,18 @@ it('F0-03: kabag_pkp berhak mengakses rute tulis RKAT', function () {
     $this->actingAs($kabagPkp)
         ->get('/pkp/rencana/impor')
         ->assertOk();
+});
+
+it('F0-03: PeranSeeder tidak menimpa sandi atau membuat ulang admin jika admin sudah ada', function () {
+    $admin = User::where('email', 'admin@pkp.local')->firstOrFail();
+    $admin->update([
+        'email' => 'admin@baznascianjur.local',
+        'password' => Hash::make('SandiBaruKuat#2026'),
+    ]);
+
+    $this->seed(PeranSeeder::class);
+
+    expect(User::where('email', 'admin@pkp.local')->exists())->toBeFalse()
+        ->and(User::where('email', 'admin@baznascianjur.local')->exists())->toBeTrue()
+        ->and(Hash::check('SandiBaruKuat#2026', $admin->fresh()->password))->toBeTrue();
 });

@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.composer/cache \
 # ---- Tahap 3: runtime FrankenPHP ----
 FROM dunglas/frankenphp:${FRANKENPHP_VERSION} AS app
 
-RUN install-php-extensions pdo_pgsql gd zip intl bcmath opcache pcntl \
+RUN install-php-extensions pdo_pgsql gd zip intl bcmath opcache pcntl redis \
     && rm -rf /tmp/* /var/cache/apk/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
