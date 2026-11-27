@@ -1,0 +1,126 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      APP_NAME: "${APP_NAME:-SISFOZIS BAZNAS Cianjur (Staging)}"
+      APP_ENV: ${APP_ENV:-staging}
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      APP_LOCALE: ${APP_LOCALE:-id}
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pkp}
+      DB_USERNAME: ${DB_USERNAME:-pkp}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      CACHE_STORE: database
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      RUN_SEEDER: ${RUN_SEEDER:-false}
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    volumes:
+      - easypanel_storage:/var/www/html/storage
+
+  pkp-queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment:
+      APP_NAME: "${APP_NAME:-SISFOZIS BAZNAS Cianjur (Staging)}"
+      APP_ENV: ${APP_ENV:-staging}
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      APP_LOCALE: ${APP_LOCALE:-id}
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pkp}
+      DB_USERNAME: ${DB_USERNAME:-pkp}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      CACHE_STORE: database
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    volumes:
+      - easypanel_storage:/var/www/html/storage
+
+  pkp-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      APP_NAME: "${APP_NAME:-SISFOZIS BAZNAS Cianjur (Staging)}"
+      APP_ENV: ${APP_ENV:-staging}
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      APP_LOCALE: ${APP_LOCALE:-id}
+      DB_CONNECTION: pgsql
+      DB_HOST: pkp-postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pkp}
+      DB_USERNAME: ${DB_USERNAME:-pkp}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      QUEUE_CONNECTION: database
+      SESSION_DRIVER: database
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      CACHE_STORE: database
+      RUN_MIGRATIONS: "false"
+      RUN_SEEDER: "false"
+    depends_on:
+      pkp-postgres:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    volumes:
+      - easypanel_storage:/var/www/html/storage
+
+  pkp-postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pkp}
+      POSTGRES_USER: ${DB_USERNAME:-pkp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-}
+    volumes:
+      - easypanel_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-pkp} -d ${DB_DATABASE:-pkp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  easypanel_storage:
+  easypanel_postgres:
